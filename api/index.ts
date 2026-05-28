@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { createApp } from "../src/app";
+import { createApp } from "../backend/src/app";
 
 const app = createApp();
 
