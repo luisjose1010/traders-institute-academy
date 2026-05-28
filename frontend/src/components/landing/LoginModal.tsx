@@ -31,14 +31,13 @@ export function LoginModal({ children }: { children: React.ReactNode }) {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    const ok = login(email, password);
+    const result = await login(email, password);
     setLoading(false);
-    if (ok) {
+    if (result.ok) {
       setOpen(false);
       navigate("/dashboard");
     } else {
-      setError("Invalid credentials. Please try again.");
+      setError(result.error || "Invalid credentials. Please try again.");
     }
   };
 
@@ -83,7 +82,6 @@ export function LoginModal({ children }: { children: React.ReactNode }) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="modal-password" className="text-xs font-semibold tracking-wider uppercase text-[#888]">Password</Label>
-              <button type="button" className="text-xs text-[#C9A84C] hover:underline">Forgot?</button>
             </div>
             <Input
               id="modal-password"

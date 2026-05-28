@@ -2,10 +2,10 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { LoginModal } from "./LoginModal";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, LayoutDashboard } from "lucide-react";
+import { LogOut, LayoutDashboard, Shield } from "lucide-react";
 
 export function Navbar() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, isAdmin, logout } = useAuth();
   const [, navigate] = useLocation();
 
   const handleLogout = () => {
@@ -35,6 +35,11 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
+              {isAdmin && (
+                <span className="hidden md:flex items-center gap-1 text-xs font-bold text-[#e74c3c] bg-[rgba(231,76,60,0.1)] border border-[rgba(231,76,60,0.2)] px-2 py-0.5 rounded">
+                  <Shield size={11} /> ADMIN
+                </span>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -42,12 +47,15 @@ export function Navbar() {
                 onClick={() => navigate("/dashboard")}
               >
                 <LayoutDashboard size={15} />
-                My Courses
+                {isAdmin ? "Admin Panel" : "My Courses"}
               </Button>
               <div className="flex items-center gap-2">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-black"
-                  style={{ background: "linear-gradient(135deg, #C9A84C, #8a6a20)" }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{
+                    background: isAdmin ? "linear-gradient(135deg, #e74c3c, #c0392b)" : "linear-gradient(135deg, #C9A84C, #8a6a20)",
+                    color: isAdmin ? "#fff" : "#000"
+                  }}
                 >
                   {user?.initials}
                 </div>

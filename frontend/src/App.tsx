@@ -4,23 +4,31 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
-import Dashboard from "@/pages/Dashboard";
+import StudentDashboard from "@/pages/StudentDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component }: { component: () => React.ReactElement }) {
-  const { isAuthenticated } = useAuth();
+function ProtectedRoute({ component: Component, requireRole }: { component: () => React.ReactElement; requireRole?: "admin" | "student" }) {
+  const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) return <Redirect to="/" />;
+  if (requireRole && user?.role !== requireRole) return <Redirect to="/dashboard" />;
   return <Component />;
 }
 
 function Router() {
+  const { isAuthenticated, isAdmin } = useAuth();
+
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/dashboard">
-        {() => <ProtectedRoute component={Dashboard} />}
+        {() => {
+          if (!isAuthenticated) return <Redirect to="/" />;
+          if (isAdmin) return <ProtectedRoute component={AdminDashboard} requireRole="admin" />;
+          return <ProtectedRoute component={StudentDashboard} requireRole="student" />;
+        }}
       </Route>
       <Route component={NotFound} />
     </Switch>

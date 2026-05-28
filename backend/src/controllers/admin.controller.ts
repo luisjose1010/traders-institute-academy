@@ -34,3 +34,13 @@ export async function grantAccess(req: Request, res: Response) {
   const result = await adminService.grantAccess(parsed.data);
   res.status(201).json(result);
 }
+
+export async function getAllCourses(_req: Request, res: Response) {
+  const allCourses = await adminService.getAllCourses();
+  res.json(allCourses);
+}
+
+export async function getAllUsers(_req: Request, res: Response) {
+  const allUsers = await adminService.getAllUsers();
+  res.json(allUsers);
+}

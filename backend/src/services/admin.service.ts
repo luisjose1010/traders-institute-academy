@@ -36,3 +36,16 @@ export async function grantAccess(input: GrantAccessInput) {
 
   return { granted: true };
 }
+
+export async function getAllCourses() {
+  return db.select().from(courses);
+}
+
+export async function getAllUsers() {
+  return db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+  }).from(users);
+}

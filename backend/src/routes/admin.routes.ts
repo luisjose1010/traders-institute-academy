@@ -7,6 +7,8 @@ const router = Router();
 
 router.use(authMiddleware, requireAdmin);
 
+router.get("/courses", adminController.getAllCourses);
+router.get("/users", adminController.getAllUsers);
 router.post("/users", adminController.createUser);
 router.post("/courses", adminController.createCourse);
 router.post("/grant-access", adminController.grantAccess);
