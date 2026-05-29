@@ -21,3 +21,16 @@ export const grantAccessSchema = z.object({
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
 export type GrantAccessInput = z.infer<typeof grantAccessSchema>;
+
+export const updateCourseSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
+});
+
+export const courseIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
+export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
+export type CourseIdParams = z.infer<typeof courseIdParamsSchema>;

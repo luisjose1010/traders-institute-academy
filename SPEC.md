@@ -28,6 +28,8 @@ api: GET  /api/health                     → 200 {status:"ok"}
 api: POST /api/auth/login                 → 200 {token, user:{id,name,email,role}} ∈ 401
 api: GET  /api/admin/courses              → 200 [{id,name,description,status}] (admin JWT)
 api: POST /api/admin/courses              → 201 {id,name,description,status} (admin JWT)
+api: PUT  /api/admin/courses/:id          → 200 {id,name,description,status} ∈ 404 (admin JWT)
+api: DELETE /api/admin/courses/:id        → 200 {id,name,description,status:inactive} ∈ 404 (admin JWT, soft delete)
 api: GET  /api/admin/users                → 200 [{id,name,email,role}] (admin JWT)
 api: POST /api/admin/users                → 201 {id,name,email,role} (admin JWT)
 api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
@@ -157,8 +159,8 @@ traders-institute-academy/
 | T20 | x | video player component (embedded YouTube/Vimeo or custom) | C1 |
 | T21 | x | student progress tracking → track lesson completion in DB | I.db |
 | T22 | x | progress API: `POST /api/student/course/:id/progress`, `GET /api/student/progress` | V3, I.api |
-| T23 | . | edit course → `PUT /api/admin/courses/:id` | V2, I.api |
-| T24 | . | delete course → `DELETE /api/admin/courses/:id` (soft delete) | V2 |
+| T23 | x | edit course → `PUT /api/admin/courses/:id` | V2, I.api |
+| T24 | x | delete course → `DELETE /api/admin/courses/:id` (soft delete) | V2 |
 | T25 | . | admin list students in UI (not just create) | T14 |
 | T26 | . | profile page — update name, email, password | C1, V1 |
 | T27 | . | CORS config → production domain allowlist | C4 |

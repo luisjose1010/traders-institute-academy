@@ -37,6 +37,16 @@ export const api = {
         "/api/admin/courses",
         { method: "POST", body: JSON.stringify(data) }
       ),
+    updateCourse: (courseId: number, data: { name?: string; description?: string; status?: string }) =>
+      request<{ id: number; name: string; description: string; status: string }>(
+        `/api/admin/courses/${courseId}`,
+        { method: "PUT", body: JSON.stringify(data) }
+      ),
+    deleteCourse: (courseId: number) =>
+      request<{ id: number; name: string; description: string; status: string }>(
+        `/api/admin/courses/${courseId}`,
+        { method: "DELETE" }
+      ),
     createUser: (data: { name: string; email: string; password: string; role: string }) =>
       request<{ id: string; name: string; email: string; role: string }>(
         "/api/admin/users",

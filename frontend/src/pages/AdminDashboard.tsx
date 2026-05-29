@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, Plus, UserPlus,
-  ShieldCheck, Bell, Settings, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database
+  ShieldCheck, Bell, Settings, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2
 } from "lucide-react";
 
 interface Course { id: number; name: string; description: string; status: string; }
@@ -32,6 +32,11 @@ export default function AdminDashboard() {
   const [granting, setGranting] = useState(false);
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const showMsg = (type: "success" | "error", text: string) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
 
@@ -80,6 +85,34 @@ export default function AdminDashboard() {
       setGrantUserId(""); setGrantCourseId("");
     } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setGranting(false);
+  };
+
+  const startEdit = (course: Course) => {
+    setEditingCourse(course);
+    setEditName(course.name);
+    setEditDesc(course.description);
+  };
+
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+    setSaving(true);
+    try {
+      await api.admin.updateCourse(editingCourse.id, { name: editName, description: editDesc });
+      showMsg("success", "Course updated: " + editName);
+      setEditingCourse(null);
+      loadCourses();
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    setSaving(false);
+  };
+
+  const handleDeleteCourse = async (courseId: number, name: string) => {
+    if (!confirm(`Archive "${name}"? It will be hidden from students.`)) return;
+    try {
+      await api.admin.deleteCourse(courseId);
+      showMsg("success", "Course archived: " + name);
+      loadCourses();
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
   };
 
   const navItems = [
@@ -188,6 +221,25 @@ export default function AdminDashboard() {
                 </form>
               </div>
 
+              {editingCourse && (
+                <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.3)" }}>
+                  <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                    <Pencil size={16} color="#C9A84C" /> Edit: {editingCourse.name}
+                    <button onClick={() => setEditingCourse(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "#666", cursor: "pointer" }}><X size={16} /></button>
+                  </h3>
+                  <form onSubmit={handleUpdateCourse} style={{ display: "grid", gap: "0.75rem" }}>
+                    <div><label style={labelStyle}>Course Name</label><input value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} required /></div>
+                    <div><label style={labelStyle}>Description</label><textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }} required /></div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="submit" disabled={saving} style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.65rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                        {saving ? <><Loader2 size={14} /> Saving...</> : "Save Changes"}
+                      </button>
+                      <button type="button" onClick={() => setEditingCourse(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.65rem 1rem", color: "#888", cursor: "pointer", fontSize: "0.85rem" }}>Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
               <div style={cardStyle}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
                   <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Existing Courses ({courses.length})</h3>
@@ -197,11 +249,15 @@ export default function AdminDashboard() {
                   <div style={{ display: "grid", gap: "0.5rem" }}>
                     {courses.map(c => (
                       <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                        <div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{c.name}</div>
                           <div style={{ fontSize: "0.75rem", color: "#555" }}>{c.description.slice(0, 80)}{c.description.length > 80 ? "..." : ""}</div>
                         </div>
-                        <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
+                          <button onClick={() => startEdit(c)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={12} /></button>
+                          <button onClick={() => handleDeleteCourse(c.id, c.name)} style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={12} /></button>
+                        </div>
                       </div>
                     ))}
                   </div>

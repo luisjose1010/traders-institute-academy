@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createUserSchema, createCourseSchema, grantAccessSchema } from "../schemas/admin.schema";
+import { createUserSchema, createCourseSchema, grantAccessSchema, updateCourseSchema, courseIdParamsSchema } from "../schemas/admin.schema";
 import * as adminService from "../services/admin.service";
 
 export async function createUser(req: Request, res: Response) {
@@ -43,4 +43,42 @@ export async function getAllCourses(_req: Request, res: Response) {
 export async function getAllUsers(_req: Request, res: Response) {
   const allUsers = await adminService.getAllUsers();
   res.json(allUsers);
+}
+
+export async function updateCourse(req: Request, res: Response) {
+  const params = courseIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid course ID" });
+    return;
+  }
+
+  const parsed = updateCourseSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const course = await adminService.updateCourse(params.data.id, parsed.data);
+  if (!course) {
+    res.status(404).json({ error: "Course not found" });
+    return;
+  }
+
+  res.json(course);
+}
+
+export async function deleteCourse(req: Request, res: Response) {
+  const params = courseIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid course ID" });
+    return;
+  }
+
+  const course = await adminService.deleteCourse(params.data.id);
+  if (!course) {
+    res.status(404).json({ error: "Course not found" });
+    return;
+  }
+
+  res.json(course);
 }

@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
+import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { users, courses, courseAccess } from "../db/schema";
-import type { CreateUserInput, CreateCourseInput, GrantAccessInput } from "../schemas/admin.schema";
+import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput } from "../schemas/admin.schema";
 
 export async function createUser(input: CreateUserInput) {
   const passwordHash = await bcrypt.hash(input.password, 10);
@@ -48,4 +49,24 @@ export async function getAllUsers() {
     email: users.email,
     role: users.role,
   }).from(users);
+}
+
+export async function updateCourse(courseId: number, input: UpdateCourseInput) {
+  const [course] = await db
+    .update(courses)
+    .set(input)
+    .where(eq(courses.id, courseId))
+    .returning();
+
+  return course ?? null;
+}
+
+export async function deleteCourse(courseId: number) {
+  const [course] = await db
+    .update(courses)
+    .set({ status: "inactive" })
+    .where(eq(courses.id, courseId))
+    .returning();
+
+  return course ?? null;
 }
