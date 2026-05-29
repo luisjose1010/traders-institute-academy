@@ -15,7 +15,14 @@ export interface AuthUser {
 function getStoredUser(): AuthUser | null {
   try {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed.role || !parsed.id) {
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
