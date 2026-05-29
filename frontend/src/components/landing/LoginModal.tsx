@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { AlertCircle } from "lucide-react";
 
 export function LoginModal({ children }: { children: React.ReactNode }) {
@@ -82,6 +83,9 @@ export function LoginModal({ children }: { children: React.ReactNode }) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="modal-password" className="text-xs font-semibold tracking-wider uppercase text-[#888]">Password</Label>
+              <ForgotPasswordModal>
+                <button type="button" className="text-xs text-[#C9A84C] hover:underline">Forgot?</button>
+              </ForgotPasswordModal>
             </div>
             <Input
               id="modal-password"

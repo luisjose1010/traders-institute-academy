@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import StudentDashboard from "@/pages/StudentDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CourseDetail from "@/pages/CourseDetail";
+import ResetPassword from "@/pages/ResetPassword";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/dashboard/course/:id">
         {() => {
           if (!isAuthenticated) return <Redirect to="/" />;

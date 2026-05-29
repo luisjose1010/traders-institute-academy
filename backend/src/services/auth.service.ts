@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { v4 as uuid } from "uuid";
+import { eq, and } from "drizzle-orm";
 import { db } from "../db/index";
-import { users } from "../db/schema";
+import { users, passwordResetTokens } from "../db/schema";
 import { signToken } from "../lib/jwt";
+import { sendPasswordResetEmail } from "./email.service";
 import type { LoginInput, UpdateProfileInput } from "../schemas/auth.schema";
 
 export async function login(input: LoginInput) {
@@ -44,4 +46,58 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
     .returning();
 
   return user ? { id: user.id, name: user.name, email: user.email, role: user.role } : null;
+}
+
+export async function forgotPassword(email: string) {
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  if (!user) return { sent: true };
+
+  const token = uuid();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  await db.insert(passwordResetTokens).values({
+    id: uuid(),
+    userId: user.id,
+    token,
+    expiresAt,
+  });
+
+  await sendPasswordResetEmail(user.email, token);
+
+  return { sent: true };
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const [resetToken] = await db
+    .select()
+    .from(passwordResetTokens)
+    .where(
+      and(
+        eq(passwordResetTokens.token, token),
+        eq(passwordResetTokens.used, false)
+      )
+    )
+    .limit(1);
+
+  if (!resetToken) return null;
+  if (resetToken.expiresAt < new Date()) return null;
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await db
+    .update(users)
+    .set({ passwordHash })
+    .where(eq(users.id, resetToken.userId));
+
+  await db
+    .update(passwordResetTokens)
+    .set({ used: true })
+    .where(eq(passwordResetTokens.id, resetToken.id));
+
+  return { reset: true };
 }
