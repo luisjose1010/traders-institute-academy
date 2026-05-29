@@ -174,9 +174,9 @@ traders-institute-academy/
 | T29 | . | password recovery flow (forgot/reset via email?) | |
 | T30 | . | real enrollment/payment flow (Stripe?) | |
 | T31 | . | notification system (email or in-app) | |
-| T32 | . | mobile responsive polish (sidebar, course cards) | C1 |
-| T33 | . | error boundaries + toast notifications on API errors | C1 |
-| T34 | . | SEO meta tags + opengraph on landing | C1 |
+| T32 | x | mobile responsive polish (sidebar, course cards) | C1 |
+| T33 | x | error boundaries + toast notifications on API errors | C1 |
+| T34 | x | SEO meta tags + opengraph on landing | C1 |
 | T35 | x | admin lessons manager (add/edit/delete lessons per course) | V2 |
 
 ---
