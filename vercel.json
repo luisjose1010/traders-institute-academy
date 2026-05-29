@@ -1,0 +1,8 @@
+{
+  "buildCommand": "pnpm --filter backend build",
+  "devCommand": "pnpm --filter backend dev",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
+  ]
+}

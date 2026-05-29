@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [courses, setCourses] = useState<Course[]>([]);
+  const [students, setStudents] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [newCourseName, setNewCourseName] = useState("");
@@ -45,7 +46,11 @@ export default function AdminDashboard() {
     api.admin.getAllCourses().then(d => { setCourses(d); setLoading(false); }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadCourses(); }, []);
+  const loadStudents = () => {
+    api.admin.getAllUsers().then(d => setStudents(d.filter(u => u.role === "student"))).catch(() => {});
+  };
+
+  useEffect(() => { loadCourses(); loadStudents(); }, []);
 
   const handleLogout = () => { logout(); navigate("/"); };
 
@@ -71,6 +76,7 @@ export default function AdminDashboard() {
       showMsg("success", "Student created: " + res.name);
       setLastStudentId(res.id);
       setNewStudentName(""); setNewStudentEmail(""); setNewStudentPass("");
+      loadStudents();
     } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setCreatingStudent(false);
   };
@@ -287,6 +293,29 @@ export default function AdminDashboard() {
                   <p style={{ fontSize: "0.75rem", color: "#555", margin: "4px 0 0" }}>Use this ID to grant course access in the Grant Access tab.</p>
                 </div>
               )}
+
+              <div style={cardStyle}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>All Students ({students.length})</h3>
+                  <button onClick={loadStudents} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#666" }}><RefreshCw size={14} /></button>
+                </div>
+                {students.length === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : (
+                  <div style={{ display: "grid", gap: "0.5rem" }}>
+                    {students.map(s => (
+                      <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                        <div>
+                          <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{s.name}</div>
+                          <div style={{ fontSize: "0.75rem", color: "#555" }}>{s.email}</div>
+                        </div>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied!"); }}
+                          style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#C9A84C", fontSize: "0.72rem", fontWeight: 600 }}
+                        >Copy ID</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

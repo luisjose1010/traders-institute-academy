@@ -7,7 +7,20 @@ import studentRoutes from "./routes/student.routes";
 export function createApp() {
   const app = express();
 
-  app.use(cors());
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",")
+    : ["http://localhost:5173", "http://localhost:3000"];
+
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }));
   app.use(express.json());
 
   app.use("/api/auth", authRoutes);

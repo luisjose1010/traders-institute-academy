@@ -58,6 +58,7 @@ env: TURSO_DATABASE_URL  ! (backend)
 env: TURSO_AUTH_TOKEN    ! (backend)
 env: JWT_SECRET          ! (backend)
 env: PORT                ? (backend, default 3000)
+env: CORS_ORIGIN         ? (backend, comma-separated origins, default localhost:5173,3000)
 env: VITE_API_URL        ? (frontend, default http://localhost:3000)
 ```
 
@@ -161,10 +162,10 @@ traders-institute-academy/
 | T22 | x | progress API: `POST /api/student/course/:id/progress`, `GET /api/student/progress` | V3, I.api |
 | T23 | x | edit course → `PUT /api/admin/courses/:id` | V2, I.api |
 | T24 | x | delete course → `DELETE /api/admin/courses/:id` (soft delete) | V2 |
-| T25 | . | admin list students in UI (not just create) | T14 |
+| T25 | x | admin list students in UI (not just create) | T14 |
 | T26 | . | profile page — update name, email, password | C1, V1 |
-| T27 | . | CORS config → production domain allowlist | C4 |
-| T28 | . | `vercel.json` root config (buildCommand, rewrites, rootDir) | C4 |
+| T27 | x | CORS config → production domain allowlist | C4 |
+| T28 | x | `vercel.json` root config (buildCommand, rewrites, rootDir) | C4 |
 | T29 | . | password recovery flow (forgot/reset via email?) | |
 | T30 | . | real enrollment/payment flow (Stripe?) | |
 | T31 | . | notification system (email or in-app) | |
