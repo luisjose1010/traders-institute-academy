@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, Plus, UserPlus,
-  ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo
+  ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, ArrowLeft
 } from "lucide-react";
 
 interface Course { id: number; name: string; description: string; status: string; }
@@ -196,6 +196,10 @@ export default function AdminDashboard() {
   const cardStyle: React.CSSProperties = { background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.5rem" };
   const labelStyle: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", color: "#888", textTransform: "uppercase" as const, marginBottom: 6, display: "block" };
 
+  const sectionTitle = managingCourseId
+    ? `Courses / ${managingCourseName} Lessons`
+    : navItems.find(n => n.id === activeSection)?.label ?? activeSection;
+
   return (
     <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif", display: "flex" }}>
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -206,8 +210,8 @@ export default function AdminDashboard() {
         </div>
         <div style={{ padding: "0.75rem 1.5rem" }}><span style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.12em", color: "#e74c3c", textTransform: "uppercase" as const }}>Admin Panel</span></div>
         <nav style={{ flex: 1, padding: "0.5rem 0.75rem", display: "flex", flexDirection: "column" as const, gap: 2 }}>
-          {navItems.map(item => { const active = activeSection === item.id; const Icon = item.icon; return (
-            <button key={item.id} onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.65rem 0.9rem", borderRadius: 8, background: active ? "rgba(231,76,60,0.1)" : "transparent", border: active ? "1px solid rgba(231,76,60,0.2)" : "1px solid transparent", color: active ? "#e74c3c" : "#777", fontSize: "0.85rem", fontWeight: active ? 600 : 400, cursor: "pointer", textAlign: "left" as const, width: "100%", transition: "all 0.15s" }}>
+          {navItems.map(item => { const active = activeSection === item.id && !managingCourseId; const Icon = item.icon; return (
+            <button key={item.id} onClick={() => { setActiveSection(item.id); setManagingCourseId(null); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.65rem 0.9rem", borderRadius: 8, background: active ? "rgba(231,76,60,0.1)" : "transparent", border: active ? "1px solid rgba(231,76,60,0.2)" : "1px solid transparent", color: active ? "#e74c3c" : "#777", fontSize: "0.85rem", fontWeight: active ? 600 : 400, cursor: "pointer", textAlign: "left" as const, width: "100%", transition: "all 0.15s" }}>
               <Icon size={16} />{item.label}
             </button>
           ); })}
@@ -225,12 +229,14 @@ export default function AdminDashboard() {
       </aside>
 
       <div style={{ flex: 1, minWidth: 0 }} className="md:ml-[240px]">
-        <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}><Menu size={20} /></button>
-            <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#888", textTransform: "capitalize" as const }}>{activeSection}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20, gap: 12 }}>
+          <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}><Menu size={20} /></button>
+          {managingCourseId && (
+            <button onClick={() => setManagingCourseId(null)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><ArrowLeft size={16} /> Back</button>
+          )}
+          {managingCourseId && <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)" }} />}
+          <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#888" }}>{sectionTitle}</span>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "2px 8px", borderRadius: 4 }}>ADMIN</div>
           </div>
         </header>
@@ -243,18 +249,17 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
-            <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Manage courses, students, and access permissions.</p>
-          </div>
-
-          {activeSection === "dashboard" && (
+          {activeSection === "dashboard" && !managingCourseId && (
             <>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
+                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Manage courses, students, and access permissions.</p>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.875rem", marginBottom: "2rem" }}>
                 {[
                   { label: "Total Courses", value: courses.length, icon: BookOpen, color: "#C9A84C" },
                   { label: "Active", value: courses.filter(c => c.status === "active").length, icon: CheckCircle2, color: "#27ae60" },
-                  { label: "Role", value: "Admin", icon: ShieldCheck, color: "#e74c3c" },
+                  { label: "Students", value: students.length, icon: Users, color: "#C9A84C" },
                 ].map(stat => { const StatIcon = stat.icon; return (
                   <div key={stat.label} style={cardStyle}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -278,8 +283,12 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {activeSection === "courses" && (
+          {activeSection === "courses" && !managingCourseId && (
             <div style={{ display: "grid", gap: "1.5rem" }}>
+              <div style={{ marginBottom: "0.5rem" }}>
+                <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Courses</h1>
+                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Create, edit, and manage courses and their lessons.</p>
+              </div>
               <div style={cardStyle}>
                 <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><Plus size={16} color="#C9A84C" /> Create New Course</h3>
                 <form onSubmit={handleCreateCourse} style={{ display: "grid", gap: "0.75rem" }}>
@@ -312,7 +321,7 @@ export default function AdminDashboard() {
 
               <div style={cardStyle}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Existing Courses ({courses.length})</h3>
+                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>All Courses ({courses.length})</h3>
                   <button onClick={loadCourses} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#666" }}><RefreshCw size={14} /></button>
                 </div>
                 {loading ? <p style={{ color: "#555" }}>Loading...</p> : courses.length === 0 ? <p style={{ color: "#555" }}>No courses yet. Create one above.</p> : (
@@ -325,9 +334,9 @@ export default function AdminDashboard() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                           <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
-                          <button onClick={() => startEdit(c)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={12} /></button>
-                          <button onClick={() => loadLessons(c.id, c.name)} style={{ background: "none", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#C9A84C" }}><ListVideo size={12} /></button>
-                          <button onClick={() => handleDeleteCourse(c.id, c.name)} style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={12} /></button>
+                          <button onClick={() => loadLessons(c.id, c.name)} title="Manage Lessons" style={{ background: "none", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#C9A84C" }}><ListVideo size={12} /></button>
+                          <button onClick={() => startEdit(c)} title="Edit Course" style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={12} /></button>
+                          <button onClick={() => handleDeleteCourse(c.id, c.name)} title="Archive Course" style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={12} /></button>
                         </div>
                       </div>
                     ))}
@@ -337,19 +346,16 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {managingCourseId && (
-            <div style={{ display: "grid", gap: "1.5rem", marginBottom: "1.5rem" }}>
-              <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.2)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
-                    <ListVideo size={16} color="#C9A84C" /> Lessons: {managingCourseName}
-                  </h3>
-                  <button onClick={() => setManagingCourseId(null)} style={{ background: "none", border: "none", color: "#666", cursor: "pointer" }}><X size={16} /></button>
-                </div>
+          {activeSection === "courses" && managingCourseId && (
+            <div style={{ display: "grid", gap: "1.5rem" }}>
+              <div style={cardStyle}>
+                <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                  <ListVideo size={16} color="#C9A84C" /> Lessons ({courseLessons.length})
+                </h3>
 
                 <form onSubmit={handleAddLesson} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: "0.5rem", marginBottom: "1rem" }}>
                   <input value={newLessonTitle} onChange={e => setNewLessonTitle(e.target.value)} placeholder="Lesson title" style={inputStyle} required />
-                  <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="Video URL" style={inputStyle} required />
+                  <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="Video URL (YouTube or direct)" style={inputStyle} required />
                   <input type="number" value={newLessonOrder} onChange={e => setNewLessonOrder(parseInt(e.target.value) || 1)} placeholder="#" style={{ ...inputStyle, width: 60 }} min={1} required />
                   <button type="submit" disabled={addingLesson} style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.6rem 1rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
                     {addingLesson ? <Loader2 size={14} /> : <Plus size={14} />} Add
@@ -365,8 +371,8 @@ export default function AdminDashboard() {
                           <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{l.title}</div>
                           <div style={{ fontSize: "0.7rem", color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.videoUrl}</div>
                         </div>
-                        <button onClick={() => startEditLesson(l)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={11} /></button>
-                        <button onClick={() => handleDeleteLesson(l.id, l.title)} style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={11} /></button>
+                        <button onClick={() => startEditLesson(l)} title="Edit" style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={11} /></button>
+                        <button onClick={() => handleDeleteLesson(l.id, l.title)} title="Delete" style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={11} /></button>
                       </div>
                     ))}
                   </div>
@@ -392,6 +398,10 @@ export default function AdminDashboard() {
 
           {activeSection === "students" && (
             <div style={{ display: "grid", gap: "1.5rem" }}>
+              <div style={{ marginBottom: "0.5rem" }}>
+                <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Students</h1>
+                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Create student accounts and view enrolled students.</p>
+              </div>
               <div style={cardStyle}>
                 <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><UserPlus size={16} color="#27ae60" /> Create New Student</h3>
                 <form onSubmit={handleCreateStudent} style={{ display: "grid", gap: "0.75rem" }}>
@@ -425,10 +435,7 @@ export default function AdminDashboard() {
                           <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{s.name}</div>
                           <div style={{ fontSize: "0.75rem", color: "#555" }}>{s.email}</div>
                         </div>
-                        <button
-                          onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied!"); }}
-                          style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#C9A84C", fontSize: "0.72rem", fontWeight: 600 }}
-                        >Copy ID</button>
+                        <button onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied!"); }} style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#C9A84C", fontSize: "0.72rem", fontWeight: 600 }}>Copy ID</button>
                       </div>
                     ))}
                   </div>
@@ -438,19 +445,24 @@ export default function AdminDashboard() {
           )}
 
           {activeSection === "access" && (
-            <div style={cardStyle}>
-              <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#9b59b6" /> Grant Course Access</h3>
-              <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "1rem" }}>Assign a student to a course by entering their User ID and the Course ID.</p>
-              <form onSubmit={handleGrantAccess} style={{ display: "grid", gap: "0.75rem" }}>
-                <div><label style={labelStyle}>Student User ID</label><input value={grantUserId} onChange={e => setGrantUserId(e.target.value)} placeholder="uuid-of-student" style={inputStyle} required /></div>
-                <div><label style={labelStyle}>Course ID</label><input type="number" value={grantCourseId} onChange={e => setGrantCourseId(e.target.value)} placeholder="1" style={inputStyle} required /></div>
-                <button type="submit" disabled={granting} style={{ background: "#9b59b6", color: "#fff", border: "none", borderRadius: 8, padding: "0.65rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  {granting ? <><Loader2 size={14} /> Granting...</> : <><ShieldCheck size={14} /> Grant Access</>}
-                </button>
-              </form>
-              <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: 8, background: "rgba(155,89,182,0.05)", border: "1px solid rgba(155,89,182,0.15)" }}>
-                <p style={{ fontSize: "0.75rem", color: "#9b59b6", margin: 0, fontWeight: 600 }}>Tip:</p>
-                <p style={{ fontSize: "0.75rem", color: "#666", margin: "4px 0 0" }}>Create a student first, copy their User ID from the Students tab, then come back here to grant access to specific courses.</p>
+            <div style={{ display: "grid", gap: "1.5rem" }}>
+              <div style={{ marginBottom: "0.5rem" }}>
+                <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Grant Access</h1>
+                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Assign students to courses.</p>
+              </div>
+              <div style={cardStyle}>
+                <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#9b59b6" /> Grant Course Access</h3>
+                <form onSubmit={handleGrantAccess} style={{ display: "grid", gap: "0.75rem" }}>
+                  <div><label style={labelStyle}>Student User ID</label><input value={grantUserId} onChange={e => setGrantUserId(e.target.value)} placeholder="uuid-of-student" style={inputStyle} required /></div>
+                  <div><label style={labelStyle}>Course ID</label><input type="number" value={grantCourseId} onChange={e => setGrantCourseId(e.target.value)} placeholder="1" style={inputStyle} required /></div>
+                  <button type="submit" disabled={granting} style={{ background: "#9b59b6", color: "#fff", border: "none", borderRadius: 8, padding: "0.65rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                    {granting ? <><Loader2 size={14} /> Granting...</> : <><ShieldCheck size={14} /> Grant Access</>}
+                  </button>
+                </form>
+                <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: 8, background: "rgba(155,89,182,0.05)", border: "1px solid rgba(155,89,182,0.15)" }}>
+                  <p style={{ fontSize: "0.75rem", color: "#9b59b6", margin: 0, fontWeight: 600 }}>Tip:</p>
+                  <p style={{ fontSize: "0.75rem", color: "#666", margin: "4px 0 0" }}>Go to Students tab, copy a student's User ID, then paste it here along with the Course ID to grant access.</p>
+                </div>
               </div>
             </div>
           )}
