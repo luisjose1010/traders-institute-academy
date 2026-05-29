@@ -128,4 +128,24 @@ export const api = {
         "/api/student/progress"
       ),
   },
+  notifications: {
+    getAll: () =>
+      request<{ id: number; title: string; message: string; read: boolean; createdAt: string }[]>(
+        "/api/notifications"
+      ),
+    getUnreadCount: () =>
+      request<{ count: number }>(
+        "/api/notifications/unread-count"
+      ),
+    markAsRead: (id: number) =>
+      request<{ id: number }>(
+        `/api/notifications/${id}/read`,
+        { method: "PUT" }
+      ),
+    markAllAsRead: () =>
+      request<{ marked: boolean }>(
+        "/api/notifications/read-all",
+        { method: "PUT" }
+      ),
+  },
 };

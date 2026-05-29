@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   Clock, BookOpen, LogOut, PlayCircle, LayoutDashboard,
   GraduationCap, User, Settings, Menu, X
@@ -109,6 +110,9 @@ export default function StudentDashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}><Menu size={20} /></button>
             <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#888", textTransform: "capitalize" as const }}>{activeSection}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <NotificationBell />
           </div>
         </header>
 

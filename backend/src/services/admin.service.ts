@@ -3,6 +3,8 @@ import { v4 as uuid } from "uuid";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/index";
 import { users, courses, courseAccess, lessons } from "../db/schema";
+import { createNotification } from "./notification.service";
+import { sendWelcomeEmail, sendAccessGrantedEmail } from "./email.service";
 import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput } from "../schemas/admin.schema";
 
 export async function createUser(input: CreateUserInput) {
@@ -16,6 +18,11 @@ export async function createUser(input: CreateUserInput) {
     passwordHash,
     role: input.role,
   });
+
+  try {
+    await createNotification(id, "Welcome!", `Welcome to Traders Institute Academy, ${input.name}!`);
+    if (input.role === "student") await sendWelcomeEmail(input.email, input.name);
+  } catch {}
 
   return { id, name: input.name, email: input.email, role: input.role };
 }
@@ -34,6 +41,15 @@ export async function grantAccess(input: GrantAccessInput) {
     userId: input.userId,
     courseId: input.courseId,
   }).onConflictDoNothing();
+
+  try {
+    const [student] = await db.select().from(users).where(eq(users.id, input.userId)).limit(1);
+    const [course] = await db.select().from(courses).where(eq(courses.id, input.courseId)).limit(1);
+    if (student && course) {
+      await createNotification(student.id, "Course Access Granted", `You now have access to "${course.name}". Start learning!`);
+      await sendAccessGrantedEmail(student.email, student.name, course.name);
+    }
+  } catch {}
 
   return { granted: true };
 }

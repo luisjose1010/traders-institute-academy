@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, Plus, UserPlus,
   ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, ArrowLeft, Eye
@@ -263,6 +264,7 @@ export default function AdminDashboard() {
           {managingCourseId && <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)" }} />}
           <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#888" }}>{sectionTitle}</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <NotificationBell />
             <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "2px 8px", borderRadius: 4 }}>ADMIN</div>
           </div>
         </header>
