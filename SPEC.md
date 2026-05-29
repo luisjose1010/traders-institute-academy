@@ -34,6 +34,9 @@ api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
 api: GET  /api/student/my-courses         → 200 [{id,name,description,status}] (student JWT)
 api: GET  /api/student/courses/:id         → 200 {id,name,description,status} ∈ 403 (student JWT + access)
 api: GET  /api/student/course/:id/lessons → 200 [{id,title,videoUrl,orderIndex}] ∈ 403 (student JWT + access)
+api: GET  /api/student/course/:id/progress → 200 {courseId,total,completed,percent} ∈ 403 (student JWT + access)
+api: POST /api/student/course/:id/complete-lesson → 200 {lessonId,completed:true} ∈ 403 (student JWT + access)
+api: GET  /api/student/progress           → 200 [{lessonId,completedAt}] (student JWT)
 ```
 
 ### Database (Turso / LibSQL)
@@ -43,6 +46,7 @@ table: users         → id(text pk), name, email(unique), password_hash, role(a
 table: courses       → id(int pk auto), name, description, status(active|inactive)
 table: lessons       → id(int pk auto), course_id(fk→courses), title, video_url, order_index
 table: course_access → user_id(fk→users), course_id(fk→courses), unique(user_id,course_id)
+table: lesson_progress → user_id(fk→users), lesson_id(fk→lessons), completed_at(timestamp), unique(user_id,lesson_id)
 ```
 
 ### Environment
@@ -151,8 +155,8 @@ traders-institute-academy/
 |---|---|---|---|
 | T19 | x | course detail page → `/dashboard/course/:id` with lesson list | C1 |
 | T20 | x | video player component (embedded YouTube/Vimeo or custom) | C1 |
-| T21 | . | student progress tracking → track lesson completion in DB | I.db |
-| T22 | . | progress API: `POST /api/student/course/:id/progress`, `GET /api/student/progress` | V3, I.api |
+| T21 | x | student progress tracking → track lesson completion in DB | I.db |
+| T22 | x | progress API: `POST /api/student/course/:id/progress`, `GET /api/student/progress` | V3, I.api |
 | T23 | . | edit course → `PUT /api/admin/courses/:id` | V2, I.api |
 | T24 | . | delete course → `DELETE /api/admin/courses/:id` (soft delete) | V2 |
 | T25 | . | admin list students in UI (not just create) | T14 |

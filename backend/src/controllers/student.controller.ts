@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { courseIdParamsSchema } from "../schemas/student.schema";
+import { courseIdParamsSchema, lessonIdBodySchema } from "../schemas/student.schema";
 import * as studentService from "../services/student.service";
 
 export async function getMyCourses(req: Request, res: Response) {
@@ -40,4 +40,44 @@ export async function getCourse(req: Request, res: Response) {
   }
 
   res.json(course);
+}
+
+export async function markLessonComplete(req: Request, res: Response) {
+  const userId = req.userId!;
+  const parsed = lessonIdBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid lesson ID" });
+    return;
+  }
+
+  const result = await studentService.markLessonComplete(userId, parsed.data.lessonId);
+  if (!result) {
+    res.status(403).json({ error: "Lesson not found or no access" });
+    return;
+  }
+
+  res.json(result);
+}
+
+export async function getCourseProgress(req: Request, res: Response) {
+  const userId = req.userId!;
+  const parsed = courseIdParamsSchema.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid course ID" });
+    return;
+  }
+
+  const progress = await studentService.getCourseProgress(userId, parsed.data.id);
+  if (!progress) {
+    res.status(403).json({ error: "You do not have access to this course" });
+    return;
+  }
+
+  res.json(progress);
+}
+
+export async function getMyProgress(req: Request, res: Response) {
+  const userId = req.userId!;
+  const progress = await studentService.getMyProgress(userId);
+  res.json(progress);
 }

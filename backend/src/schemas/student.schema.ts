@@ -5,3 +5,9 @@ export const courseIdParamsSchema = z.object({
 });
 
 export type CourseIdParams = z.infer<typeof courseIdParamsSchema>;
+
+export const lessonIdBodySchema = z.object({
+  lessonId: z.number().int().positive(),
+});
+
+export type LessonIdBody = z.infer<typeof lessonIdBodySchema>;

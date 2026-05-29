@@ -28,10 +28,22 @@ export default function StudentDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [courses, setCourses] = useState<ApiCourse[]>([]);
+  const [progress, setProgress] = useState<Record<number, { total: number; completed: number; percent: number }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.student.getMyCourses().then(d => { setCourses(d); setLoading(false); }).catch(() => setLoading(false));
+    api.student.getMyCourses().then(async d => {
+      setCourses(d);
+      const progressMap: Record<number, { total: number; completed: number; percent: number }> = {};
+      await Promise.all(d.map(async c => {
+        try {
+          const p = await api.student.getCourseProgress(c.id);
+          progressMap[c.id] = p;
+        } catch {}
+      }));
+      setProgress(progressMap);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const handleLogout = () => { logout(); navigate("/"); };
@@ -126,7 +138,18 @@ export default function StudentDashboard() {
                         </div>
                         <p style={{ fontSize: "0.8rem", color: "#777", lineHeight: 1.6, marginBottom: "1rem" }}>{course.description}</p>
                         <div style={{ display: "flex", gap: 14, marginBottom: "1rem" }}><span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "#555" }}><Clock size={11} /> {meta.duration}</span></div>
-                        <button style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)", color: "#C9A84C", borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: "pointer" }}><PlayCircle size={11} /> Start Course</button>
+                        {progress[course.id] && progress[course.id].total > 0 && (
+                          <div style={{ marginBottom: "0.75rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                              <span style={{ fontSize: "0.68rem", color: "#666" }}>{progress[course.id].completed}/{progress[course.id].total} lessons</span>
+                              <span style={{ fontSize: "0.68rem", color: "#C9A84C", fontWeight: 600 }}>{progress[course.id].percent}%</span>
+                            </div>
+                            <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+                              <div style={{ height: "100%", borderRadius: 2, background: progress[course.id].percent === 100 ? "#27ae60" : "linear-gradient(90deg, #C9A84C, #e8c96a)", width: `${progress[course.id].percent}%`, transition: "width 0.5s" }} />
+                            </div>
+                          </div>
+                        )}
+                        <button style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)", color: "#C9A84C", borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: "pointer" }}><PlayCircle size={11} /> {progress[course.id]?.percent === 100 ? "Review" : progress[course.id]?.percent > 0 ? "Continue" : "Start Course"}</button>
                       </div>
                     </div>
                   ); })}

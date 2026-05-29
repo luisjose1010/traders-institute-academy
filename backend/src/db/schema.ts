@@ -33,3 +33,15 @@ export const courseAccess = sqliteTable(
     pk: unique().on(table.userId, table.courseId),
   })
 );
+
+export const lessonProgress = sqliteTable(
+  "lesson_progress",
+  {
+    userId: text("user_id").notNull().references(() => users.id),
+    lessonId: integer("lesson_id").notNull().references(() => lessons.id),
+    completedAt: integer("completed_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => ({
+    pk: unique().on(table.userId, table.lessonId),
+  })
+);

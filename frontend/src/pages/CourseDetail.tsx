@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import { api } from "@/lib/api";
-import { ArrowLeft, Clock, Play, BookOpen, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Play, BookOpen, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 
 interface Course { id: number; name: string; description: string; status: string; }
 interface Lesson { id: number; title: string; videoUrl: string; orderIndex: number; }
+interface Progress { courseId: number; total: number; completed: number; percent: number; }
 
 export default function CourseDetail() {
   const [, params] = useRoute("/dashboard/course/:id");
@@ -14,20 +15,49 @@ export default function CourseDetail() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const [marking, setMarking] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!courseId) { navigate("/dashboard"); return; }
     setLoading(true);
-    Promise.all([api.student.getCourse(courseId), api.student.getCourseLessons(courseId)])
-      .then(([c, l]) => { setCourse(c); setLessons(l); if (l.length > 0) setActiveLesson(l[0]); })
+    Promise.all([
+      api.student.getCourse(courseId),
+      api.student.getCourseLessons(courseId),
+      api.student.getCourseProgress(courseId),
+    ])
+      .then(([c, l, p]) => {
+        setCourse(c);
+        setLessons(l);
+        setProgress(p);
+        if (l.length > 0) setActiveLesson(l[0]);
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [courseId]);
 
-  const markedComplete = new Set<number>();
+  const refreshProgress = useCallback(async () => {
+    if (!courseId) return;
+    try {
+      const p = await api.student.getCourseProgress(courseId);
+      setProgress(p);
+    } catch {}
+  }, [courseId]);
+
+  const handleMarkComplete = async () => {
+    if (!activeLesson || !courseId) return;
+    setMarking(true);
+    try {
+      await api.student.markLessonComplete(courseId, activeLesson.id);
+      setCompletedIds(prev => new Set(prev).add(activeLesson.id));
+      await refreshProgress();
+    } catch {}
+    setMarking(false);
+  };
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#080808", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -42,12 +72,22 @@ export default function CourseDetail() {
     </div>
   );
 
+  const isCurrentComplete = activeLesson ? completedIds.has(activeLesson.id) : false;
+
   return (
     <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 20, gap: 12 }}>
         <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><ArrowLeft size={18} /> <span style={{ fontSize: "0.85rem" }}>Back</span></button>
         <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)" }} />
         <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{course.name}</span>
+        {progress && (
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 80, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
+              <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #C9A84C, #e8c96a)", width: `${progress.percent}%`, transition: "width 0.5s" }} />
+            </div>
+            <span style={{ fontSize: "0.72rem", color: "#C9A84C", fontWeight: 600 }}>{progress.percent}%</span>
+          </div>
+        )}
       </header>
 
       <div style={{ display: "flex", flexDirection: "column", maxWidth: 1200, margin: "0 auto", padding: "0 1rem" }} className="lg:flex-row">
@@ -56,11 +96,31 @@ export default function CourseDetail() {
             <>
               <VideoPlayer url={activeLesson.videoUrl} title={activeLesson.title} />
               <div style={{ padding: "1.25rem 0" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em", color: "#C9A84C" }}>LESSON {activeLesson.orderIndex}</span>
+                  {isCurrentComplete && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#27ae60", fontWeight: 600 }}>
+                      <CheckCircle2 size={13} /> Completed
+                    </span>
+                  )}
                 </div>
                 <h2 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "0 0 0.5rem", fontFamily: "Poppins, sans-serif" }}>{activeLesson.title}</h2>
-                <p style={{ color: "#666", fontSize: "0.85rem" }}>{course.description}</p>
+                <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "1.25rem" }}>{course.description}</p>
+                {!isCurrentComplete && (
+                  <button
+                    onClick={handleMarkComplete}
+                    disabled={marking}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)",
+                      color: "#C9A84C", borderRadius: 8, padding: "10px 20px",
+                      fontSize: "0.85rem", fontWeight: 600, cursor: marking ? "not-allowed" : "pointer",
+                      opacity: marking ? 0.6 : 1,
+                    }}
+                  >
+                    {marking ? <><Loader2 size={15} /> Marking...</> : <><CheckCircle2 size={15} /> Mark as Complete</>}
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -76,12 +136,14 @@ export default function CourseDetail() {
           <div style={{ padding: "1.25rem 1rem", borderLeft: "none" }} className="lg:border-l lg:border-[rgba(255,255,255,0.06)]">
             <h3 style={{ fontSize: "0.85rem", fontWeight: 700, margin: "0 0 1rem", fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
               <BookOpen size={14} color="#C9A84C" /> Course Content
-              <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 400, marginLeft: "auto" }}>{lessons.length} lessons</span>
+              <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 400, marginLeft: "auto" }}>
+                {progress ? `${progress.completed}/${progress.total}` : lessons.length} lessons
+              </span>
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {lessons.map(lesson => {
                 const active = activeLesson?.id === lesson.id;
-                const completed = markedComplete.has(lesson.id);
+                const completed = completedIds.has(lesson.id);
                 return (
                   <button
                     key={lesson.id}
@@ -97,7 +159,7 @@ export default function CourseDetail() {
                     }}
                   >
                     <span style={{ marginTop: 1, flexShrink: 0 }}>
-                      {completed ? <CheckCircle2 size={14} /> : active ? <Play size={14} /> : <Lock size={14} />}
+                      {completed ? <CheckCircle2 size={14} /> : active ? <Play size={14} /> : <Circle size={14} />}
                     </span>
                     <div>
                       <div style={{ fontWeight: active ? 600 : 400, lineHeight: 1.3 }}>{lesson.title}</div>

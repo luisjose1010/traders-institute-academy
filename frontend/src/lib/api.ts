@@ -61,5 +61,18 @@ export const api = {
       request<{ id: number; name: string; description: string; status: string }>(
         `/api/student/courses/${courseId}`
       ),
+    getCourseProgress: (courseId: number) =>
+      request<{ courseId: number; total: number; completed: number; percent: number }>(
+        `/api/student/course/${courseId}/progress`
+      ),
+    markLessonComplete: (courseId: number, lessonId: number) =>
+      request<{ lessonId: number; completed: boolean }>(
+        `/api/student/course/${courseId}/complete-lesson`,
+        { method: "POST", body: JSON.stringify({ lessonId }) }
+      ),
+    getMyProgress: () =>
+      request<{ lessonId: number; completedAt: string }[]>(
+        "/api/student/progress"
+      ),
   },
 };
