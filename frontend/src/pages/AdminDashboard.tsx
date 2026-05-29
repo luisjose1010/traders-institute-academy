@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, Plus, UserPlus,
-  ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, ArrowLeft
+  ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, ArrowLeft, Eye
 } from "lucide-react";
 
 interface Course { id: number; name: string; description: string; status: string; }
@@ -28,6 +28,11 @@ export default function AdminDashboard() {
   const [newStudentPass, setNewStudentPass] = useState("");
   const [creatingStudent, setCreatingStudent] = useState(false);
   const [lastStudentId, setLastStudentId] = useState<string | null>(null);
+
+  const [viewingAccessUserId, setViewingAccessUserId] = useState<string | null>(null);
+  const [viewingAccessName, setViewingAccessName] = useState("");
+  const [studentAccessList, setStudentAccessList] = useState<{ courseId: number; courseName: string }[]>([]);
+  const [accessLoading, setAccessLoading] = useState(false);
 
   const [grantUserId, setGrantUserId] = useState("");
   const [grantCourseId, setGrantCourseId] = useState("");
@@ -103,8 +108,29 @@ export default function AdminDashboard() {
       await api.admin.grantAccess({ userId: grantUserId, courseId: parseInt(grantCourseId) });
       showMsg("success", "Access granted!");
       setGrantUserId(""); setGrantCourseId("");
+      if (viewingAccessUserId) loadStudentAccess(viewingAccessUserId, viewingAccessName);
     } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setGranting(false);
+  };
+
+  const loadStudentAccess = (userId: string, name: string) => {
+    setViewingAccessUserId(userId);
+    setViewingAccessName(name);
+    setAccessLoading(true);
+    api.admin.getStudentAccess(userId)
+      .then(d => setStudentAccessList(d))
+      .catch(() => {})
+      .finally(() => setAccessLoading(false));
+  };
+
+  const handleRevokeAccess = async (courseId: number, courseName: string) => {
+    if (!viewingAccessUserId) return;
+    if (!confirm(`Revoke access to "${courseName}"?`)) return;
+    try {
+      await api.admin.revokeAccess({ userId: viewingAccessUserId, courseId });
+      showMsg("success", "Access revoked: " + courseName);
+      loadStudentAccess(viewingAccessUserId, viewingAccessName);
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
   };
 
   const startEdit = (course: Course) => {
@@ -400,7 +426,7 @@ export default function AdminDashboard() {
             <div style={{ display: "grid", gap: "1.5rem" }}>
               <div style={{ marginBottom: "0.5rem" }}>
                 <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Students</h1>
-                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Create student accounts and view enrolled students.</p>
+                <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Create student accounts, manage access, and verify payments.</p>
               </div>
               <div style={cardStyle}>
                 <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><UserPlus size={16} color="#27ae60" /> Create New Student</h3>
@@ -418,7 +444,6 @@ export default function AdminDashboard() {
                 <div style={{ ...cardStyle, background: "rgba(39,174,96,0.05)", border: "1px solid rgba(39,174,96,0.15)" }}>
                   <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#27ae60" }}>Last Created Student</h4>
                   <p style={{ fontSize: "0.82rem", color: "#888", margin: 0 }}>User ID: <code style={{ color: "#C9A84C", background: "rgba(201,168,76,0.1)", padding: "2px 6px", borderRadius: 4, fontSize: "0.78rem" }}>{lastStudentId}</code></p>
-                  <p style={{ fontSize: "0.75rem", color: "#555", margin: "4px 0 0" }}>Use this ID to grant course access in the Grant Access tab.</p>
                 </div>
               )}
 
@@ -430,17 +455,47 @@ export default function AdminDashboard() {
                 {students.length === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : (
                   <div style={{ display: "grid", gap: "0.5rem" }}>
                     {students.map(s => (
-                      <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                        <div>
+                      <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{s.name}</div>
                           <div style={{ fontSize: "0.75rem", color: "#555" }}>{s.email}</div>
                         </div>
-                        <button onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied!"); }} style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#C9A84C", fontSize: "0.72rem", fontWeight: 600 }}>Copy ID</button>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          <button onClick={() => loadStudentAccess(s.id, s.name)} title="View Access" style={{ background: "none", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#C9A84C" }}><Eye size={12} /></button>
+                          <button onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied!"); }} style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#C9A84C", fontSize: "0.72rem", fontWeight: 600 }}>Copy ID</button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+
+              {viewingAccessUserId && (
+                <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.2)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                    <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                      <ShieldCheck size={16} color="#C9A84C" /> Access: {viewingAccessName}
+                    </h3>
+                    <button onClick={() => setViewingAccessUserId(null)} style={{ background: "none", border: "none", color: "#666", cursor: "pointer" }}><X size={16} /></button>
+                  </div>
+                  {accessLoading ? <p style={{ color: "#555" }}>Loading...</p> : studentAccessList.length === 0 ? (
+                    <p style={{ color: "#555" }}>No course access. Use the Grant Access tab to assign courses.</p>
+                  ) : (
+                    <div style={{ display: "grid", gap: "0.4rem" }}>
+                      {studentAccessList.map(a => (
+                        <div key={a.courseId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0.8rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                          <div>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{a.courseName}</span>
+                            <span style={{ fontSize: "0.65rem", color: "#555", marginLeft: 8 }}>ID: {a.courseId}</span>
+                          </div>
+                          <button onClick={() => handleRevokeAccess(a.courseId, a.courseName)} title="Revoke Access" style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#e74c3c", fontSize: "0.72rem", fontWeight: 600 }}>Revoke</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ fontSize: "0.7rem", color: "#444", margin: "0.75rem 0 0" }}>User ID: {viewingAccessUserId}</p>
+                </div>
+              )}
             </div>
           )}
 

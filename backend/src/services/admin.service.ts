@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../db/index";
 import { users, courses, courseAccess, lessons } from "../db/schema";
 import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput } from "../schemas/admin.schema";
@@ -33,9 +33,28 @@ export async function grantAccess(input: GrantAccessInput) {
   await db.insert(courseAccess).values({
     userId: input.userId,
     courseId: input.courseId,
-  });
+  }).onConflictDoNothing();
 
   return { granted: true };
+}
+
+export async function revokeAccess(userId: string, courseId: number) {
+  await db.delete(courseAccess).where(
+    and(eq(courseAccess.userId, userId), eq(courseAccess.courseId, courseId))
+  );
+
+  return { revoked: true };
+}
+
+export async function getStudentAccess(userId: string) {
+  return db
+    .select({
+      courseId: courseAccess.courseId,
+      courseName: courses.name,
+    })
+    .from(courseAccess)
+    .innerJoin(courses, eq(courseAccess.courseId, courses.id))
+    .where(eq(courseAccess.userId, userId));
 }
 
 export async function getAllCourses() {

@@ -62,6 +62,15 @@ export const api = {
         "/api/admin/grant-access",
         { method: "POST", body: JSON.stringify(data) }
       ),
+    revokeAccess: (data: { userId: string; courseId: number }) =>
+      request<{ revoked: boolean }>(
+        "/api/admin/revoke-access",
+        { method: "POST", body: JSON.stringify(data) }
+      ),
+    getStudentAccess: (userId: string) =>
+      request<{ courseId: number; courseName: string }[]>(
+        `/api/admin/users/${userId}/access`
+      ),
     getLessonsByCourse: (courseId: number) =>
       request<{ id: number; courseId: number; title: string; videoUrl: string; orderIndex: number }[]>(
         `/api/admin/courses/${courseId}/lessons`

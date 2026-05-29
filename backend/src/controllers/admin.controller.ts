@@ -148,3 +148,25 @@ export async function deleteLesson(req: Request, res: Response) {
 
   res.json(lesson);
 }
+
+export async function revokeAccess(req: Request, res: Response) {
+  const parsed = grantAccessSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const result = await adminService.revokeAccess(parsed.data.userId, parsed.data.courseId);
+  res.json(result);
+}
+
+export async function getStudentAccess(req: Request, res: Response) {
+  const userId = String(req.params.userId || "");
+  if (!userId) {
+    res.status(400).json({ error: "User ID required" });
+    return;
+  }
+
+  const access = await adminService.getStudentAccess(userId);
+  res.json(access);
+}

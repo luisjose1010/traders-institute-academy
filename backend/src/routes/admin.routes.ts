@@ -20,4 +20,8 @@ router.post("/courses/:id/lessons", adminController.createLesson);
 router.put("/lessons/:id", adminController.updateLesson);
 router.delete("/lessons/:id", adminController.deleteLesson);
 
+router.post("/grant-access", adminController.grantAccess);
+router.post("/revoke-access", adminController.revokeAccess);
+router.get("/users/:userId/access", adminController.getStudentAccess);
+
 export default router;
