@@ -174,7 +174,7 @@ traders-institute-academy/
 | T27 | x | CORS config → production domain allowlist | C4 |
 | T28 | x | `vercel.json` root config (buildCommand, rewrites, rootDir) | C4 |
 | T29 | . | password recovery flow (forgot/reset via email?) | |
-| T30 | . | real enrollment/payment flow (Stripe?) | |
+| T30 | x | real enrollment/payment flow — manual via admin (create student → grant access after payment) | |
 | T31 | . | notification system (email or in-app) | |
 | T32 | x | mobile responsive polish (sidebar, course cards) | C1 |
 | T33 | x | error boundaries + toast notifications on API errors | C1 |
