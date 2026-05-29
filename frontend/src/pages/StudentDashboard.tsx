@@ -35,6 +35,7 @@ export default function StudentDashboard() {
   }, []);
 
   const handleLogout = () => { logout(); navigate("/"); };
+  const handleCourseClick = (courseId: number) => { navigate(`/dashboard/course/${courseId}`); };
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "courses", label: "My Courses", icon: GraduationCap },
@@ -110,7 +111,7 @@ export default function StudentDashboard() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
                   {courses.map((course, i) => { const meta = COURSE_META[course.id] || COURSE_META[1]; const levelStyle = LEVEL_COLORS[meta.level] || LEVEL_COLORS.Beginner; return (
-                    <div key={course.id} style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer" }} onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.4)"; }} onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}>
+                    <div key={course.id} onClick={() => handleCourseClick(course.id)} style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer" }} onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.4)"; }} onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}>
                       <div style={{ height: 3, background: "linear-gradient(90deg, #C9A84C, #e8c96a)" }} />
                       <div style={{ padding: "1.25rem" }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: "0.9rem" }}>

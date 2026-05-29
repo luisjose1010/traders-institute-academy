@@ -15,6 +15,34 @@ export async function getMyCourses(userId: string) {
     .where(eq(courseAccess.userId, userId));
 }
 
+export async function getCourse(userId: string, courseId: number) {
+  const [access] = await db
+    .select()
+    .from(courseAccess)
+    .where(
+      and(
+        eq(courseAccess.userId, userId),
+        eq(courseAccess.courseId, courseId)
+      )
+    )
+    .limit(1);
+
+  if (!access) return null;
+
+  const [course] = await db
+    .select({
+      id: courses.id,
+      name: courses.name,
+      description: courses.description,
+      status: courses.status,
+    })
+    .from(courses)
+    .where(eq(courses.id, courseId))
+    .limit(1);
+
+  return course ?? null;
+}
+
 export async function getCourseLessons(userId: string, courseId: number) {
   const [access] = await db
     .select()

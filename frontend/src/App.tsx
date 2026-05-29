@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import StudentDashboard from "@/pages/StudentDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import CourseDetail from "@/pages/CourseDetail";
 import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/dashboard/course/:id">
+        {() => {
+          if (!isAuthenticated) return <Redirect to="/" />;
+          if (isAdmin) return <Redirect to="/dashboard" />;
+          return <CourseDetail />;
+        }}
+      </Route>
       <Route path="/dashboard">
         {() => {
           if (!isAuthenticated) return <Redirect to="/" />;

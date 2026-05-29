@@ -8,6 +8,7 @@ const router = Router();
 router.use(authMiddleware, requireStudent);
 
 router.get("/my-courses", studentController.getMyCourses);
+router.get("/courses/:id", studentController.getCourse);
 router.get("/course/:id/lessons", studentController.getCourseLessons);
 
 export default router;

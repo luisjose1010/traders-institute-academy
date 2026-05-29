@@ -32,6 +32,7 @@ api: GET  /api/admin/users                → 200 [{id,name,email,role}] (admin 
 api: POST /api/admin/users                → 201 {id,name,email,role} (admin JWT)
 api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
 api: GET  /api/student/my-courses         → 200 [{id,name,description,status}] (student JWT)
+api: GET  /api/student/courses/:id         → 200 {id,name,description,status} ∈ 403 (student JWT + access)
 api: GET  /api/student/course/:id/lessons → 200 [{id,title,videoUrl,orderIndex}] ∈ 403 (student JWT + access)
 ```
 
@@ -148,8 +149,8 @@ traders-institute-academy/
 
 | id | status | task | cites |
 |---|---|---|---|
-| T19 | . | course detail page → `/dashboard/course/:id` with lesson list | C1 |
-| T20 | . | video player component (embedded YouTube/Vimeo or custom) | C1 |
+| T19 | x | course detail page → `/dashboard/course/:id` with lesson list | C1 |
+| T20 | x | video player component (embedded YouTube/Vimeo or custom) | C1 |
 | T21 | . | student progress tracking → track lesson completion in DB | I.db |
 | T22 | . | progress API: `POST /api/student/course/:id/progress`, `GET /api/student/progress` | V3, I.api |
 | T23 | . | edit course → `PUT /api/admin/courses/:id` | V2, I.api |

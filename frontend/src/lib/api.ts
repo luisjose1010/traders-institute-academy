@@ -57,5 +57,9 @@ export const api = {
       request<{ id: number; title: string; videoUrl: string; orderIndex: number }[]>(
         `/api/student/course/${courseId}/lessons`
       ),
+    getCourse: (courseId: number) =>
+      request<{ id: number; name: string; description: string; status: string }>(
+        `/api/student/courses/${courseId}`
+      ),
   },
 };
