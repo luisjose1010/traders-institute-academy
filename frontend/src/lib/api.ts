@@ -22,6 +22,11 @@ export const api = {
         "/api/auth/login",
         { method: "POST", body: JSON.stringify({ email, password }) }
       ),
+    updateProfile: (data: { name?: string; password?: string }) =>
+      request<{ id: string; name: string; email: string; role: string }>(
+        "/api/auth/profile",
+        { method: "PUT", body: JSON.stringify(data) }
+      ),
   },
   admin: {
     getAllCourses: () =>
@@ -56,6 +61,25 @@ export const api = {
       request<{ granted: boolean }>(
         "/api/admin/grant-access",
         { method: "POST", body: JSON.stringify(data) }
+      ),
+    getLessonsByCourse: (courseId: number) =>
+      request<{ id: number; courseId: number; title: string; videoUrl: string; orderIndex: number }[]>(
+        `/api/admin/courses/${courseId}/lessons`
+      ),
+    createLesson: (courseId: number, data: { title: string; videoUrl: string; orderIndex: number }) =>
+      request<{ id: number; courseId: number; title: string; videoUrl: string; orderIndex: number }>(
+        `/api/admin/courses/${courseId}/lessons`,
+        { method: "POST", body: JSON.stringify(data) }
+      ),
+    updateLesson: (lessonId: number, data: { title?: string; videoUrl?: string; orderIndex?: number }) =>
+      request<{ id: number; title: string; videoUrl: string; orderIndex: number }>(
+        `/api/admin/lessons/${lessonId}`,
+        { method: "PUT", body: JSON.stringify(data) }
+      ),
+    deleteLesson: (lessonId: number) =>
+      request<{ id: number }>(
+        `/api/admin/lessons/${lessonId}`,
+        { method: "DELETE" }
       ),
   },
   student: {

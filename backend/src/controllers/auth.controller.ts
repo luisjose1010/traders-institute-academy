@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { loginSchema } from "../schemas/auth.schema";
+import { loginSchema, updateProfileSchema } from "../schemas/auth.schema";
 import * as authService from "../services/auth.service";
 
 export async function login(req: Request, res: Response) {
@@ -12,6 +12,23 @@ export async function login(req: Request, res: Response) {
   const result = await authService.login(parsed.data);
   if (!result) {
     res.status(401).json({ error: "Invalid email or password" });
+    return;
+  }
+
+  res.json(result);
+}
+
+export async function updateProfile(req: Request, res: Response) {
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const userId = req.userId!;
+  const result = await authService.updateProfile(userId, parsed.data);
+  if (!result) {
+    res.status(404).json({ error: "User not found" });
     return;
   }
 

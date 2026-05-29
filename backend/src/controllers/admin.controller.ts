@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createUserSchema, createCourseSchema, grantAccessSchema, updateCourseSchema, courseIdParamsSchema } from "../schemas/admin.schema";
+import { createUserSchema, createCourseSchema, grantAccessSchema, updateCourseSchema, courseIdParamsSchema, createLessonSchema, updateLessonSchema, lessonIdParamsSchema } from "../schemas/admin.schema";
 import * as adminService from "../services/admin.service";
 
 export async function createUser(req: Request, res: Response) {
@@ -81,4 +81,70 @@ export async function deleteCourse(req: Request, res: Response) {
   }
 
   res.json(course);
+}
+
+export async function getLessonsByCourse(req: Request, res: Response) {
+  const params = courseIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid course ID" });
+    return;
+  }
+
+  const result = await adminService.getLessonsByCourse(params.data.id);
+  res.json(result);
+}
+
+export async function createLesson(req: Request, res: Response) {
+  const params = courseIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid course ID" });
+    return;
+  }
+
+  const parsed = createLessonSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const lesson = await adminService.createLesson(params.data.id, parsed.data);
+  res.status(201).json(lesson);
+}
+
+export async function updateLesson(req: Request, res: Response) {
+  const params = lessonIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid lesson ID" });
+    return;
+  }
+
+  const parsed = updateLessonSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const lesson = await adminService.updateLesson(params.data.id, parsed.data);
+  if (!lesson) {
+    res.status(404).json({ error: "Lesson not found" });
+    return;
+  }
+
+  res.json(lesson);
+}
+
+export async function deleteLesson(req: Request, res: Response) {
+  const params = lessonIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid lesson ID" });
+    return;
+  }
+
+  const lesson = await adminService.deleteLesson(params.data.id);
+  if (!lesson) {
+    res.status(404).json({ error: "Lesson not found" });
+    return;
+  }
+
+  res.json(lesson);
 }

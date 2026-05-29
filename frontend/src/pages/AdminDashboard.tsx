@@ -4,10 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, Plus, UserPlus,
-  ShieldCheck, Bell, Settings, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2
+  ShieldCheck, Menu, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo
 } from "lucide-react";
 
 interface Course { id: number; name: string; description: string; status: string; }
+interface Lesson { id: number; courseId: number; title: string; videoUrl: string; orderIndex: number; }
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -38,6 +39,19 @@ export default function AdminDashboard() {
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [managingCourseId, setManagingCourseId] = useState<number | null>(null);
+  const [managingCourseName, setManagingCourseName] = useState("");
+  const [courseLessons, setCourseLessons] = useState<Lesson[]>([]);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [newLessonUrl, setNewLessonUrl] = useState("");
+  const [newLessonOrder, setNewLessonOrder] = useState(1);
+  const [addingLesson, setAddingLesson] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [editLessonTitle, setEditLessonTitle] = useState("");
+  const [editLessonUrl, setEditLessonUrl] = useState("");
+  const [editLessonOrder, setEditLessonOrder] = useState(1);
 
   const showMsg = (type: "success" | "error", text: string) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
 
@@ -118,6 +132,56 @@ export default function AdminDashboard() {
       await api.admin.deleteCourse(courseId);
       showMsg("success", "Course archived: " + name);
       loadCourses();
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+  };
+
+  const loadLessons = (courseId: number, courseName: string) => {
+    setManagingCourseId(courseId);
+    setManagingCourseName(courseName);
+    setLessonsLoading(true);
+    api.admin.getLessonsByCourse(courseId)
+      .then(d => setCourseLessons(d))
+      .catch(() => {})
+      .finally(() => setLessonsLoading(false));
+  };
+
+  const handleAddLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!managingCourseId || !newLessonTitle || !newLessonUrl) return;
+    setAddingLesson(true);
+    try {
+      await api.admin.createLesson(managingCourseId, { title: newLessonTitle, videoUrl: newLessonUrl, orderIndex: newLessonOrder });
+      showMsg("success", "Lesson added: " + newLessonTitle);
+      setNewLessonTitle(""); setNewLessonUrl(""); setNewLessonOrder(newLessonOrder + 1);
+      loadLessons(managingCourseId, managingCourseName);
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    setAddingLesson(false);
+  };
+
+  const startEditLesson = (lesson: Lesson) => {
+    setEditingLesson(lesson);
+    setEditLessonTitle(lesson.title);
+    setEditLessonUrl(lesson.videoUrl);
+    setEditLessonOrder(lesson.orderIndex);
+  };
+
+  const handleUpdateLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLesson) return;
+    try {
+      await api.admin.updateLesson(editingLesson.id, { title: editLessonTitle, videoUrl: editLessonUrl, orderIndex: editLessonOrder });
+      showMsg("success", "Lesson updated");
+      setEditingLesson(null);
+      if (managingCourseId) loadLessons(managingCourseId, managingCourseName);
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+  };
+
+  const handleDeleteLesson = async (lessonId: number, title: string) => {
+    if (!confirm(`Delete lesson "${title}"?`)) return;
+    try {
+      await api.admin.deleteLesson(lessonId);
+      showMsg("success", "Lesson deleted");
+      if (managingCourseId) loadLessons(managingCourseId, managingCourseName);
     } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
   };
 
@@ -262,10 +326,64 @@ export default function AdminDashboard() {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                           <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
                           <button onClick={() => startEdit(c)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={12} /></button>
+                          <button onClick={() => loadLessons(c.id, c.name)} style={{ background: "none", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#C9A84C" }}><ListVideo size={12} /></button>
                           <button onClick={() => handleDeleteCourse(c.id, c.name)} style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={12} /></button>
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {managingCourseId && (
+            <div style={{ display: "grid", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.2)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                    <ListVideo size={16} color="#C9A84C" /> Lessons: {managingCourseName}
+                  </h3>
+                  <button onClick={() => setManagingCourseId(null)} style={{ background: "none", border: "none", color: "#666", cursor: "pointer" }}><X size={16} /></button>
+                </div>
+
+                <form onSubmit={handleAddLesson} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: "0.5rem", marginBottom: "1rem" }}>
+                  <input value={newLessonTitle} onChange={e => setNewLessonTitle(e.target.value)} placeholder="Lesson title" style={inputStyle} required />
+                  <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="Video URL" style={inputStyle} required />
+                  <input type="number" value={newLessonOrder} onChange={e => setNewLessonOrder(parseInt(e.target.value) || 1)} placeholder="#" style={{ ...inputStyle, width: 60 }} min={1} required />
+                  <button type="submit" disabled={addingLesson} style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.6rem 1rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+                    {addingLesson ? <Loader2 size={14} /> : <Plus size={14} />} Add
+                  </button>
+                </form>
+
+                {lessonsLoading ? <p style={{ color: "#555" }}>Loading...</p> : courseLessons.length === 0 ? <p style={{ color: "#555" }}>No lessons yet. Add one above.</p> : (
+                  <div style={{ display: "grid", gap: "0.4rem" }}>
+                    {courseLessons.map(l => (
+                      <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.6rem 0.8rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                        <span style={{ fontSize: "0.65rem", color: "#555", fontWeight: 700, width: 20, textAlign: "center" }}>{l.orderIndex}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{l.title}</div>
+                          <div style={{ fontSize: "0.7rem", color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.videoUrl}</div>
+                        </div>
+                        <button onClick={() => startEditLesson(l)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#888" }}><Pencil size={11} /></button>
+                        <button onClick={() => handleDeleteLesson(l.id, l.title)} style={{ background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#e74c3c" }}><Trash2 size={11} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {editingLesson && (
+                  <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 8, background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)" }}>
+                    <h4 style={{ margin: "0 0 0.75rem", fontSize: "0.9rem", fontWeight: 600, color: "#C9A84C" }}>Edit: {editingLesson.title}</h4>
+                    <form onSubmit={handleUpdateLesson} style={{ display: "grid", gap: "0.5rem" }}>
+                      <input value={editLessonTitle} onChange={e => setEditLessonTitle(e.target.value)} placeholder="Title" style={inputStyle} required />
+                      <input value={editLessonUrl} onChange={e => setEditLessonUrl(e.target.value)} placeholder="Video URL" style={inputStyle} required />
+                      <input type="number" value={editLessonOrder} onChange={e => setEditLessonOrder(parseInt(e.target.value) || 1)} placeholder="#" style={{ ...inputStyle, width: 60 }} min={1} required />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="submit" style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.5rem 1rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>Save</button>
+                        <button type="button" onClick={() => setEditingLesson(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.5rem 1rem", color: "#888", cursor: "pointer", fontSize: "0.82rem" }}>Cancel</button>
+                      </div>
+                    </form>
                   </div>
                 )}
               </div>

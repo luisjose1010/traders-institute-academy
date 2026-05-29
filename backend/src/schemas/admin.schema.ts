@@ -34,3 +34,23 @@ export const courseIdParamsSchema = z.object({
 
 export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
 export type CourseIdParams = z.infer<typeof courseIdParamsSchema>;
+
+export const createLessonSchema = z.object({
+  title: z.string().min(1),
+  videoUrl: z.string().min(1),
+  orderIndex: z.number().int().positive(),
+});
+
+export const updateLessonSchema = z.object({
+  title: z.string().min(1).optional(),
+  videoUrl: z.string().min(1).optional(),
+  orderIndex: z.number().int().positive().optional(),
+});
+
+export const lessonIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
+export type CreateLessonInput = z.infer<typeof createLessonSchema>;
+export type UpdateLessonInput = z.infer<typeof updateLessonSchema>;
+export type LessonIdParams = z.infer<typeof lessonIdParamsSchema>;

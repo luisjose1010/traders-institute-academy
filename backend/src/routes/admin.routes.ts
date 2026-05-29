@@ -15,4 +15,9 @@ router.put("/courses/:id", adminController.updateCourse);
 router.delete("/courses/:id", adminController.deleteCourse);
 router.post("/grant-access", adminController.grantAccess);
 
+router.get("/courses/:id/lessons", adminController.getLessonsByCourse);
+router.post("/courses/:id/lessons", adminController.createLesson);
+router.put("/lessons/:id", adminController.updateLesson);
+router.delete("/lessons/:id", adminController.deleteLesson);
+
 export default router;

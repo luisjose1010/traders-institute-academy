@@ -25,11 +25,16 @@
 
 ```
 api: GET  /api/health                     → 200 {status:"ok"}
+api: PUT  /api/auth/profile                → 200 {id,name,email,role} (auth JWT, body: {name?,password?})
 api: POST /api/auth/login                 → 200 {token, user:{id,name,email,role}} ∈ 401
 api: GET  /api/admin/courses              → 200 [{id,name,description,status}] (admin JWT)
 api: POST /api/admin/courses              → 201 {id,name,description,status} (admin JWT)
 api: PUT  /api/admin/courses/:id          → 200 {id,name,description,status} ∈ 404 (admin JWT)
 api: DELETE /api/admin/courses/:id        → 200 {id,name,description,status:inactive} ∈ 404 (admin JWT, soft delete)
+api: GET  /api/admin/courses/:id/lessons  → 200 [{id,courseId,title,videoUrl,orderIndex}] (admin JWT)
+api: POST /api/admin/courses/:id/lessons  → 201 {id,courseId,title,videoUrl,orderIndex} (admin JWT)
+api: PUT  /api/admin/lessons/:id          → 200 {id,title,videoUrl,orderIndex} ∈ 404 (admin JWT)
+api: DELETE /api/admin/lessons/:id        → 200 {id} ∈ 404 (admin JWT)
 api: GET  /api/admin/users                → 200 [{id,name,email,role}] (admin JWT)
 api: POST /api/admin/users                → 201 {id,name,email,role} (admin JWT)
 api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
@@ -163,7 +168,7 @@ traders-institute-academy/
 | T23 | x | edit course → `PUT /api/admin/courses/:id` | V2, I.api |
 | T24 | x | delete course → `DELETE /api/admin/courses/:id` (soft delete) | V2 |
 | T25 | x | admin list students in UI (not just create) | T14 |
-| T26 | . | profile page — update name, email, password | C1, V1 |
+| T26 | x | profile page — update name, email, password | C1, V1 |
 | T27 | x | CORS config → production domain allowlist | C4 |
 | T28 | x | `vercel.json` root config (buildCommand, rewrites, rootDir) | C4 |
 | T29 | . | password recovery flow (forgot/reset via email?) | |
@@ -172,7 +177,7 @@ traders-institute-academy/
 | T32 | . | mobile responsive polish (sidebar, course cards) | C1 |
 | T33 | . | error boundaries + toast notifications on API errors | C1 |
 | T34 | . | SEO meta tags + opengraph on landing | C1 |
-| T35 | . | admin lessons manager (add/edit/delete lessons per course) | V2 |
+| T35 | x | admin lessons manager (add/edit/delete lessons per course) | V2 |
 
 ---
 

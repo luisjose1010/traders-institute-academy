@@ -2,8 +2,8 @@ import bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
-import { users, courses, courseAccess } from "../db/schema";
-import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput } from "../schemas/admin.schema";
+import { users, courses, courseAccess, lessons } from "../db/schema";
+import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput } from "../schemas/admin.schema";
 
 export async function createUser(input: CreateUserInput) {
   const passwordHash = await bcrypt.hash(input.password, 10);
@@ -69,4 +69,40 @@ export async function deleteCourse(courseId: number) {
     .returning();
 
   return course ?? null;
+}
+
+export async function getLessonsByCourse(courseId: number) {
+  return db
+    .select()
+    .from(lessons)
+    .where(eq(lessons.courseId, courseId))
+    .orderBy(lessons.orderIndex);
+}
+
+export async function createLesson(courseId: number, input: CreateLessonInput) {
+  const [lesson] = await db
+    .insert(lessons)
+    .values({ ...input, courseId })
+    .returning();
+
+  return lesson;
+}
+
+export async function updateLesson(lessonId: number, input: UpdateLessonInput) {
+  const [lesson] = await db
+    .update(lessons)
+    .set(input)
+    .where(eq(lessons.id, lessonId))
+    .returning();
+
+  return lesson ?? null;
+}
+
+export async function deleteLesson(lessonId: number) {
+  const [lesson] = await db
+    .delete(lessons)
+    .where(eq(lessons.id, lessonId))
+    .returning();
+
+  return lesson ?? null;
 }
