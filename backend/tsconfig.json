@@ -4,6 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["es2022"],
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "noEmit": false,
     "declaration": false,
