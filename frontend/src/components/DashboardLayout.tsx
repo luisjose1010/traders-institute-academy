@@ -92,7 +92,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
             {isAdmin && <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "3px 8px", borderRadius: 4 }}>ADMIN</span>}
           </div>
         </header>
-        <main style={{ padding: "1rem 1.5rem" }} className="md:ml-[240px]">
+        <main style={{ padding: "1.5rem 2rem" }} className="md:ml-[240px]">
           {children}
         </main>
       </div>
