@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
-import { eq, and, like, desc } from "drizzle-orm";
+import { eq, and, like, desc, sql } from "drizzle-orm";
 import { db } from "../db/index";
 import { users, courses, courseAccess, lessons } from "../db/schema";
 import { createNotification } from "./notification.service";
@@ -98,8 +98,9 @@ export async function getAllCourses(page = 1, limit = 10, search = "", status?: 
     .offset(offset);
 
   const [{ count }] = await db
-    .select({ count: db.$count(courses, whereClause) })
-    .from(courses);
+    .select({ count: sql<number>`count(*)` })
+    .from(courses)
+    .where(whereClause);
 
   return {
     items,
@@ -135,8 +136,9 @@ export async function getAllUsers(page = 1, limit = 10, search = "", role?: "adm
     .offset(offset);
 
   const [{ count }] = await db
-    .select({ count: db.$count(users, whereClause) })
-    .from(users);
+    .select({ count: sql<number>`count(*)` })
+    .from(users)
+    .where(whereClause);
 
   return {
     items,
