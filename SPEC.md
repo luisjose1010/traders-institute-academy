@@ -254,4 +254,5 @@ traders-institute-academy/
 |---|---|---|---|
 | B1 | 2026-05-29 | Resend free tier: emails only deliver to verified domain or account email (`luis06jose@gmail.com`) | Verify domain in Resend dashboard or upgrade to paid tier |
 | B2 | 2026-05-29 | `db.$count` doesn't exist in Drizzle ORM | Use `sql<number>\`count(*)\`` instead |
+| B3 | 2026-05-30 | Vercel deploy: pnpm ignores esbuild build scripts → vite fails silently | Added `pnpm.onlyBuiltDependencies: ["esbuild"]` to root package.json |
 
