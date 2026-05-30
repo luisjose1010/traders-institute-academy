@@ -21,7 +21,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [courseTab, setCourseTab] = useState<"active" | "archived">("active");
 
-  // Pagination state
   const [coursePage, setCoursePage] = useState(1);
   const [courseLimit, setCourseLimit] = useState(10);
   const [courseSearch, setCourseSearch] = useState("");
@@ -79,21 +78,14 @@ export default function AdminDashboard() {
   const loadCourses = () => {
     setLoading(true);
     api.admin.getAllCourses({ page: coursePage, limit: courseLimit, search: courseSearch, status: courseTab }).then(d => {
-      setCourses(d.items);
-      setCourseTotal(d.total);
-      setCourseTotalPages(d.totalPages);
-      setLoading(false);
+      setCourses(d.items); setCourseTotal(d.total); setCourseTotalPages(d.totalPages); setLoading(false);
     }).catch(() => setLoading(false));
   };
-
   const loadStudents = () => {
     api.admin.getAllUsers({ page: studentPage, limit: studentLimit, search: studentSearch, role: "student" }).then(d => {
-      setStudents(d.items);
-      setStudentTotal(d.total);
-      setStudentTotalPages(d.totalPages);
+      setStudents(d.items); setStudentTotal(d.total); setStudentTotalPages(d.totalPages);
     }).catch(() => {});
   };
-
   useEffect(() => { loadCourses(); }, [coursePage, courseLimit, courseSearch, courseTab]);
   useEffect(() => { loadStudents(); }, [studentPage, studentLimit, studentSearch]);
 
@@ -103,14 +95,12 @@ export default function AdminDashboard() {
     try { const res = await api.admin.createCourse({ name: newCourseName, description: newCourseDesc }); showMsg("success", "Course created: " + res.name); setNewCourseName(""); setNewCourseDesc(""); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setCreatingCourse(false);
   };
-
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault(); if (!newStudentName || !newStudentEmail || !newStudentPass) return;
     setCreatingStudent(true);
     try { const res = await api.admin.createUser({ name: newStudentName, email: newStudentEmail, password: newStudentPass, role: "student" }); showMsg("success", "Student created: " + res.name); setLastStudentId(res.id); setNewStudentName(""); setNewStudentEmail(""); setNewStudentPass(""); loadStudents(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setCreatingStudent(false);
   };
-
   const handleGrantAccess = async (e: React.FormEvent) => {
     e.preventDefault(); if (!selectedUserId || grantCourseIds.length === 0) return;
     setGranting(true);
@@ -122,7 +112,6 @@ export default function AdminDashboard() {
     } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setGranting(false);
   };
-
   const startEdit = (course: Course) => { setEditingCourse(course); setEditName(course.name); setEditDesc(course.description); setEditStatus(course.status); };
   const handleUpdateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editingCourse) return;
@@ -131,7 +120,6 @@ export default function AdminDashboard() {
     setSaving(false);
   };
   const handleArchiveCourse = async (courseId: number, name: string) => { if (!confirm(`Archive "${name}"?`)) return; try { await api.admin.deleteCourse(courseId); showMsg("success", "Archived: " + name); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
-
   const loadLessons = (courseId: number, courseName: string) => { setManagingCourseId(courseId); setManagingCourseName(courseName); setLessonsLoading(true); api.admin.getLessonsByCourse(courseId).then(d => setCourseLessons(d)).catch(() => {}).finally(() => setLessonsLoading(false)); };
   const handleAddLesson = async (e: React.FormEvent) => {
     e.preventDefault(); if (!managingCourseId || !newLessonTitle || !newLessonUrl) return;
@@ -142,23 +130,15 @@ export default function AdminDashboard() {
   const startEditLesson = (lesson: Lesson) => { setEditingLesson(lesson); setEditLessonTitle(lesson.title); setEditLessonUrl(lesson.videoUrl); setEditLessonOrder(lesson.orderIndex); };
   const handleUpdateLesson = async (e: React.FormEvent) => { e.preventDefault(); if (!editingLesson) return; try { await api.admin.updateLesson(editingLesson.id, { title: editLessonTitle, videoUrl: editLessonUrl, orderIndex: editLessonOrder }); showMsg("success", "Lesson updated"); setEditingLesson(null); if (managingCourseId) loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
   const handleDeleteLesson = async (lessonId: number, title: string) => { if (!confirm(`Delete "${title}"?`)) return; try { await api.admin.deleteLesson(lessonId); showMsg("success", "Lesson deleted"); if (managingCourseId) loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
-
   const loadStudentAccess = (userId: string, name: string) => { setViewingAccessUserId(userId); setViewingAccessName(name); setAccessLoading(true); api.admin.getStudentAccess(userId).then(d => setStudentAccessList(d)).catch(() => {}).finally(() => setAccessLoading(false)); };
   const handleRevokeAccess = async (courseId: number, courseName: string) => { if (!viewingAccessUserId) return; if (!confirm(`Revoke "${courseName}"?`)) return; try { await api.admin.revokeAccess({ userId: viewingAccessUserId, courseId }); showMsg("success", "Revoked: " + courseName); loadStudentAccess(viewingAccessUserId, viewingAccessName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
-
-  const inputStyle: React.CSSProperties = { background: "#080808", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.75rem 1rem", color: "#fff", fontSize: "0.9rem", width: "100%", outline: "none" };
-  const cardStyle: React.CSSProperties = { background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.5rem" };
-  const labelStyle: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", color: "#999", textTransform: "uppercase" as const, marginBottom: 8, display: "block" };
-  const btnPrimary: React.CSSProperties = { background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 };
-  const btnDanger: React.CSSProperties = { background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#e74c3c" };
-  const btnGhost: React.CSSProperties = { background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#888" };
 
   const layoutTitle = managingCourseId ? `${managingCourseName} — Lessons` : undefined;
 
   return (
     <DashboardLayout activeSection={activeSection} onSection={(s) => { setActiveSection(s); setManagingCourseId(null); }} title={layoutTitle} onBack={managingCourseId ? () => setManagingCourseId(null) : undefined}>
       {message && (
-        <div style={{ padding: "0.75rem 1rem", borderRadius: 8, marginBottom: "1.5rem", background: message.type === "success" ? "rgba(39,174,96,0.1)" : "rgba(231,76,60,0.1)", border: "1px solid " + (message.type === "success" ? "rgba(39,174,96,0.3)" : "rgba(231,76,60,0.3)"), color: message.type === "success" ? "#27ae60" : "#e74c3c", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 8 }}>
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg mb-6 text-sm ${message.type === "success" ? "bg-[rgba(39,174,96,0.1)] border border-[rgba(39,174,96,0.3)] text-[#27ae60]" : "bg-[rgba(231,76,60,0.1)] border border-[rgba(231,76,60,0.3)] text-[#e74c3c]"}`}>
           {message.type === "success" ? <CheckCircle2 size={15} /> : <X size={15} />}
           {message.text}
         </div>
@@ -166,92 +146,92 @@ export default function AdminDashboard() {
 
       {activeSection === "dashboard" && !managingCourseId && (
         <>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
-            <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Manage courses, students, and access.</p>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold mb-1 font-['Poppins']">Admin Dashboard</h1>
+            <p className="text-[#666] text-sm m-0">Manage courses, students, and access.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 220px))", gap: "1rem", marginBottom: "1.5rem" }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,220px))] gap-4 mb-6">
             {[
               { label: "Courses", value: courses.filter(c => c.status === "active").length, icon: BookOpen, color: "#C9A84C" },
               { label: "Archived", value: courses.filter(c => c.status !== "active").length, icon: Archive, color: "#666" },
               { label: "Students", value: students.length, icon: Users, color: "#27ae60" },
             ].map(stat => { const StatIcon = stat.icon; return (
-              <div key={stat.label} style={cardStyle}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 500 }}>{stat.label.toUpperCase()}</span>
-                  <StatIcon size={14} color={stat.color} />
+              <div key={stat.label} className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-[#555] font-medium">{stat.label.toUpperCase()}</span>
+                  <StatIcon size={14} style={{ color: stat.color }} />
                 </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: 700, color: stat.color, fontFamily: "Poppins, sans-serif" }}>{stat.value}</div>
+                <div className="text-3xl font-bold font-['Poppins']" style={{ color: stat.color }}>{stat.value}</div>
               </div>
             ); })}
           </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={() => setActiveSection("courses")} style={{ ...btnPrimary, fontSize: "0.85rem" }}>Manage Courses</button>
-            <button onClick={() => setActiveSection("students")} style={{ background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.25)", color: "#27ae60", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Manage Students</button>
-            <button onClick={() => setActiveSection("access")} style={{ background: "rgba(155,89,182,0.12)", border: "1px solid rgba(155,89,182,0.25)", color: "#9b59b6", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Grant Access</button>
+          <div className="flex gap-3 flex-wrap">
+            <button onClick={() => setActiveSection("courses")} className="bg-[#C9A84C] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2">Manage Courses</button>
+            <button onClick={() => setActiveSection("students")} className="bg-[rgba(39,174,96,0.12)] border border-[rgba(39,174,96,0.25)] text-[#27ae60] rounded-lg px-6 py-3 font-bold text-sm cursor-pointer">Manage Students</button>
+            <button onClick={() => setActiveSection("access")} className="bg-[rgba(155,89,182,0.12)] border border-[rgba(155,89,182,0.25)] text-[#9b59b6] rounded-lg px-6 py-3 font-bold text-sm cursor-pointer">Grant Access</button>
           </div>
         </>
       )}
 
       {activeSection === "courses" && !managingCourseId && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
-          <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><Plus size={16} color="#C9A84C" /> Create New Course</h3>
-            <form onSubmit={handleCreateCourse} style={{ display: "grid", gap: "0.75rem" }}>
-              <div><label style={labelStyle}>Course Name</label><input value={newCourseName} onChange={e => setNewCourseName(e.target.value)} placeholder="e.g. Forex Fundamentals" style={inputStyle} required /></div>
-              <div><label style={labelStyle}>Description</label><textarea value={newCourseDesc} onChange={e => setNewCourseDesc(e.target.value)} placeholder="What students will learn..." style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }} required /></div>
-              <button type="submit" disabled={creatingCourse} style={btnPrimary}>{creatingCourse ? <><Loader2 size={16} /> Creating...</> : <><Plus size={16} /> Create Course</>}</button>
+        <div className="grid gap-6">
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2 mb-4"><Plus size={16} className="text-[#C9A84C]" /> Create New Course</h3>
+            <form onSubmit={handleCreateCourse} className="grid gap-3">
+              <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Course Name</label><input value={newCourseName} onChange={e => setNewCourseName(e.target.value)} placeholder="e.g. Forex Fundamentals" className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required /></div>
+              <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Description</label><textarea value={newCourseDesc} onChange={e => setNewCourseDesc(e.target.value)} placeholder="What students will learn..." className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none min-h-[80px] resize-y" required /></div>
+              <button type="submit" disabled={creatingCourse} className="bg-[#C9A84C] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">{creatingCourse ? <><Loader2 size={16} className="animate-spin" /> Creating...</> : <><Plus size={16} /> Create Course</>}</button>
             </form>
           </div>
 
           {editingCourse && (
-            <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.3)" }}>
-              <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
-                <Pencil size={16} color="#C9A84C" /> Edit Course
-                <button onClick={() => setEditingCourse(null)} style={{ marginLeft: "auto", ...btnGhost }}><X size={14} /></button>
+            <div className="bg-[#0f0f0f] border border-[rgba(201,168,76,0.3)] rounded-xl p-6">
+              <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2 mb-4">
+                <Pencil size={16} className="text-[#C9A84C]" /> Edit Course
+                <button onClick={() => setEditingCourse(null)} className="ml-auto bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888] text-xs"><X size={14} /></button>
               </h3>
-              <form onSubmit={handleUpdateCourse} style={{ display: "grid", gap: "0.75rem" }}>
-                <div><label style={labelStyle}>Name</label><input value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} required /></div>
-                <div><label style={labelStyle}>Description</label><textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }} required /></div>
-                <div><label style={labelStyle}>Status</label>
-                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+              <form onSubmit={handleUpdateCourse} className="grid gap-3">
+                <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Name</label><input value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required /></div>
+                <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Description</label><textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none min-h-[80px] resize-y" required /></div>
+                <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Status</label>
+                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none cursor-pointer">
                     <option value="active">Active</option>
                     <option value="inactive">Archived</option>
                   </select>
                 </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button type="submit" disabled={saving} style={btnPrimary}>{saving ? "Saving..." : "Save"}</button>
-                  <button type="button" onClick={() => setEditingCourse(null)} style={{ ...btnGhost, padding: "0.75rem 1.5rem", fontSize: "0.9rem" }}>Cancel</button>
+                <div className="flex gap-3">
+                  <button type="submit" disabled={saving} className="bg-[#C9A84C] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">{saving ? "Saving..." : "Save"}</button>
+                  <button type="button" onClick={() => setEditingCourse(null)} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-6 py-3 cursor-pointer text-[#888] text-sm">Cancel</button>
                 </div>
               </form>
             </div>
           )}
 
-          <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
-              <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-                <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "active" ? "rgba(201,168,76,0.12)" : "transparent", border: "none", color: courseTab === "active" ? "#C9A84C" : "#666", fontSize: "0.82rem", fontWeight: courseTab === "active" ? 700 : 400, cursor: "pointer" }}>Active</button>
-                <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "archived" ? "rgba(255,255,255,0.06)" : "transparent", border: "none", color: courseTab === "archived" ? "#888" : "#555", fontSize: "0.82rem", fontWeight: courseTab === "archived" ? 700 : 400, cursor: "pointer" }}>Archived</button>
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="flex bg-[rgba(255,255,255,0.03)] rounded-lg border border-[rgba(255,255,255,0.06)]">
+                <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} className={`px-4 py-2 rounded-lg border-none text-sm cursor-pointer ${courseTab === "active" ? "bg-[rgba(201,168,76,0.12)] text-[#C9A84C] font-bold" : "bg-transparent text-[#666] font-normal"}`}>Active</button>
+                <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} className={`px-4 py-2 rounded-lg border-none text-sm cursor-pointer ${courseTab === "archived" ? "bg-[rgba(255,255,255,0.06)] text-[#888] font-bold" : "bg-transparent text-[#555] font-normal"}`}>Archived</button>
               </div>
-              <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
-              <button onClick={loadCourses} style={{ ...btnGhost, marginLeft: "auto" }}><RefreshCw size={14} /></button>
+              <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-1.5 text-[#fff] text-sm outline-none w-[200px]" />
+              <button onClick={loadCourses} className="ml-auto bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888]"><RefreshCw size={14} /></button>
             </div>
-            {loading ? <p style={{ color: "#555" }}>Loading...</p> : courses.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
+            {loading ? <p className="text-[#555]">Loading...</p> : courses.length === 0 ? <p className="text-[#555] py-4">{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
               <>
-                <div style={{ display: "grid", gap: "0.5rem" }}>
+                <div className="grid gap-2">
                   {courses.map(c => (
-                    <div key={c.id} onClick={() => startEdit(c)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: editingCourse?.id === c.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                    <div key={c.id} onClick={() => startEdit(c)} className={`flex items-center justify-between px-4 py-4 rounded-lg cursor-pointer transition-all ${editingCourse?.id === c.id ? "bg-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.15)]" : "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]"}`}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                       onMouseLeave={e => (e.currentTarget.style.background = editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)")}
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
-                        <div style={{ fontSize: "0.78rem", color: "#555" }}>{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold mb-0.5">{c.name}</div>
+                        <div className="text-xs text-[#555]">{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                        <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
-                        <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" style={{ ...btnGhost, padding: "8px" }}><ListVideo size={16} /></button>
-                        {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>}
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded ${c.status === "active" ? "bg-[rgba(39,174,96,0.12)] text-[#27ae60]" : "bg-[rgba(255,255,255,0.05)] text-[#555]"}`}>{c.status.toUpperCase()}</span>
+                        <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg p-2 cursor-pointer text-[#888]"><ListVideo size={16} /></button>
+                        {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" className="bg-none border border-[rgba(231,76,60,0.2)] rounded-lg p-2 cursor-pointer text-[#e74c3c]"><Trash2 size={14} /></button>}
                       </div>
                     </div>
                   ))}
@@ -264,42 +244,42 @@ export default function AdminDashboard() {
       )}
 
       {activeSection === "courses" && managingCourseId && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
-          <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ListVideo size={16} color="#C9A84C" /> Lessons ({courseLessons.length})</h3>
+        <div className="grid gap-6">
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2"><ListVideo size={16} className="text-[#C9A84C]" /> Lessons ({courseLessons.length})</h3>
             </div>
-            <form onSubmit={handleAddLesson} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: "0.5rem", marginBottom: "1.25rem" }}>
-              <input value={newLessonTitle} onChange={e => setNewLessonTitle(e.target.value)} placeholder="Title" style={inputStyle} required />
-              <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="YouTube or video URL" style={inputStyle} required />
-              <input type="number" value={newLessonOrder} onChange={e => setNewLessonOrder(parseInt(e.target.value) || 1)} placeholder="#" style={{ ...inputStyle, width: 70, textAlign: "center" }} min={1} required />
-              <button type="submit" disabled={addingLesson} style={btnPrimary}>{addingLesson ? <Loader2 size={16} /> : <Plus size={16} />} Add</button>
+            <form onSubmit={handleAddLesson} className="grid grid-cols-[1fr_2fr_auto_auto] gap-2 mb-5">
+              <input value={newLessonTitle} onChange={e => setNewLessonTitle(e.target.value)} placeholder="Title" className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required />
+              <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="YouTube or video URL" className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required />
+              <input type="number" value={newLessonOrder} onChange={e => setNewLessonOrder(parseInt(e.target.value) || 1)} placeholder="#" className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none w-[70px] text-center" min={1} required />
+              <button type="submit" disabled={addingLesson} className="bg-[#C9A84C] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">{addingLesson ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Add</button>
             </form>
-            {lessonsLoading ? <p style={{ color: "#555" }}>Loading...</p> : courseLessons.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>No lessons yet. Add one above.</p> : (
-              <div style={{ display: "grid", gap: "0.5rem" }}>
+            {lessonsLoading ? <p className="text-[#555]">Loading...</p> : courseLessons.length === 0 ? <p className="text-[#555] py-4">No lessons yet. Add one above.</p> : (
+              <div className="grid gap-2">
                 {courseLessons.map(l => (
-                  <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.75rem 1rem", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 700, width: 24, textAlign: "center" }}>{l.orderIndex}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{l.title}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.videoUrl}</div>
+                  <div key={l.id} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]">
+                    <span className="text-xs text-[#555] font-bold w-6 text-center">{l.orderIndex}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold">{l.title}</div>
+                      <div className="text-xs text-[#444] overflow-hidden text-ellipsis whitespace-nowrap">{l.videoUrl}</div>
                     </div>
-                    <button onClick={() => startEditLesson(l)} style={{ ...btnGhost, padding: "8px" }}><Pencil size={14} /></button>
-                    <button onClick={() => handleDeleteLesson(l.id, l.title)} style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>
+                    <button onClick={() => startEditLesson(l)} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg p-2 cursor-pointer text-[#888]"><Pencil size={14} /></button>
+                    <button onClick={() => handleDeleteLesson(l.id, l.title)} className="bg-none border border-[rgba(231,76,60,0.2)] rounded-lg p-2 cursor-pointer text-[#e74c3c]"><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
             )}
             {editingLesson && (
-              <div style={{ marginTop: "1.25rem", padding: "1.25rem", borderRadius: 10, background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)" }}>
-                <h4 style={{ margin: "0 0 1rem", fontSize: "0.95rem", fontWeight: 600, color: "#C9A84C" }}>Edit: {editingLesson.title}</h4>
-                <form onSubmit={handleUpdateLesson} style={{ display: "grid", gap: "0.75rem" }}>
-                  <input value={editLessonTitle} onChange={e => setEditLessonTitle(e.target.value)} style={inputStyle} required />
-                  <input value={editLessonUrl} onChange={e => setEditLessonUrl(e.target.value)} style={inputStyle} required />
-                  <input type="number" value={editLessonOrder} onChange={e => setEditLessonOrder(parseInt(e.target.value) || 1)} style={{ ...inputStyle, width: 70, textAlign: "center" }} min={1} required />
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button type="submit" style={btnPrimary}>Save</button>
-                    <button type="button" onClick={() => setEditingLesson(null)} style={{ ...btnGhost, padding: "0.75rem 1.5rem" }}>Cancel</button>
+              <div className="mt-5 p-5 rounded-lg bg-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.15)]">
+                <h4 className="text-sm font-semibold text-[#C9A84C] mb-4">Edit: {editingLesson.title}</h4>
+                <form onSubmit={handleUpdateLesson} className="grid gap-3">
+                  <input value={editLessonTitle} onChange={e => setEditLessonTitle(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required />
+                  <input value={editLessonUrl} onChange={e => setEditLessonUrl(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required />
+                  <input type="number" value={editLessonOrder} onChange={e => setEditLessonOrder(parseInt(e.target.value) || 1)} className="w-[70px] bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none text-center" min={1} required />
+                  <div className="flex gap-3">
+                    <button type="submit" className="bg-[#C9A84C] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer">Save</button>
+                    <button type="button" onClick={() => setEditingLesson(null)} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-6 py-3 cursor-pointer text-[#888] text-sm">Cancel</button>
                   </div>
                 </form>
               </div>
@@ -309,47 +289,47 @@ export default function AdminDashboard() {
       )}
 
       {activeSection === "students" && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
-          <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><UserPlus size={16} color="#27ae60" /> Create Student</h3>
-            <form onSubmit={handleCreateStudent} style={{ display: "grid", gap: "0.75rem" }}>
-              <div><label style={labelStyle}>Full Name</label><input value={newStudentName} onChange={e => setNewStudentName(e.target.value)} placeholder="John Doe" style={inputStyle} required /></div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                <div><label style={labelStyle}>Email</label><input type="email" value={newStudentEmail} onChange={e => setNewStudentEmail(e.target.value)} placeholder="john@example.com" style={inputStyle} required /></div>
-                <div><label style={labelStyle}>Password</label><input type="password" value={newStudentPass} onChange={e => setNewStudentPass(e.target.value)} placeholder="Min 6 characters" style={inputStyle} required /></div>
+        <div className="grid gap-6">
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2 mb-4"><UserPlus size={16} className="text-[#27ae60]" /> Create Student</h3>
+            <form onSubmit={handleCreateStudent} className="grid gap-3">
+              <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Full Name</label><input value={newStudentName} onChange={e => setNewStudentName(e.target.value)} placeholder="John Doe" className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Email</label><input type="email" value={newStudentEmail} onChange={e => setNewStudentEmail(e.target.value)} placeholder="john@example.com" className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required /></div>
+                <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Password</label><input type="password" value={newStudentPass} onChange={e => setNewStudentPass(e.target.value)} placeholder="Min 6 characters" className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none" required /></div>
               </div>
-              <button type="submit" disabled={creatingStudent} style={{ ...btnPrimary, background: "#27ae60" }}>{creatingStudent ? <><Loader2 size={16} /> Creating...</> : <><UserPlus size={16} /> Create Student</>}</button>
+              <button type="submit" disabled={creatingStudent} className="bg-[#27ae60] text-black border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">{creatingStudent ? <><Loader2 size={16} className="animate-spin" /> Creating...</> : <><UserPlus size={16} /> Create Student</>}</button>
             </form>
           </div>
 
-          <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students</h3>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }} placeholder="Search by name..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
-                <button onClick={loadStudents} style={btnGhost}><RefreshCw size={14} /></button>
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <h3 className="text-base font-bold font-['Poppins'] m-0">Students</h3>
+              <div className="ml-auto flex gap-2">
+                <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }} placeholder="Search by name..." className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-1.5 text-[#fff] text-sm outline-none w-[200px]" />
+                <button onClick={loadStudents} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888]"><RefreshCw size={14} /></button>
               </div>
             </div>
-            {students.length === 0 && studentTotal === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : students.length === 0 ? <p style={{ color: "#555" }}>No results.</p> : (
+            {students.length === 0 && studentTotal === 0 ? <p className="text-[#555]">No students yet.</p> : students.length === 0 ? <p className="text-[#555]">No results.</p> : (
               <>
-                <div style={{ display: "grid", gap: "0.5rem" }}>
+                <div className="grid gap-2">
                   {students.map(s => (
-                    <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                    <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} className={`flex items-center justify-between px-4 py-4 rounded-lg cursor-pointer transition-all ${viewingAccessUserId === s.id ? "bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)]" : "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]"}`}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                       onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#8a6a20] flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0">
                           {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
                         </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
-                          <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold">{s.name}</div>
+                          <div className="text-xs text-[#555]">{s.email}</div>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
-                        <span style={{ fontSize: "0.72rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
-                        <Eye size={14} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
+                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                        <span className={`text-xs ${viewingAccessUserId === s.id ? "text-[#C9A84C]" : "text-[#555]"}`}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
+                        <Eye size={14} className={viewingAccessUserId === s.id ? "text-[#C9A84C]" : "text-[#555]"} />
                       </div>
                     </div>
                   ))}
@@ -360,22 +340,22 @@ export default function AdminDashboard() {
           </div>
 
           {viewingAccessUserId && (
-            <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.2)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#C9A84C" /> {viewingAccessName}</h3>
-                <button onClick={() => setViewingAccessUserId(null)} style={btnGhost}><X size={14} /></button>
+            <div className="bg-[#0f0f0f] border border-[rgba(201,168,76,0.2)] rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2"><ShieldCheck size={16} className="text-[#C9A84C]" /> {viewingAccessName}</h3>
+                <button onClick={() => setViewingAccessUserId(null)} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888]"><X size={14} /></button>
               </div>
-              {accessLoading ? <p style={{ color: "#555" }}>Loading...</p> : studentAccessList.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "1.5rem" }}>
-                  <p style={{ color: "#555", marginBottom: "0.75rem" }}>No course access yet.</p>
-                  <button onClick={() => setActiveSection("access")} style={{ ...btnPrimary, background: "#9b59b6", fontSize: "0.82rem" }}>Grant Access</button>
+              {accessLoading ? <p className="text-[#555]">Loading...</p> : studentAccessList.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-[#555] mb-3">No course access yet.</p>
+                  <button onClick={() => setActiveSection("access")} className="bg-[#9b59b6] text-white border-none rounded-lg px-5 py-2.5 font-bold text-sm cursor-pointer">Grant Access</button>
                 </div>
               ) : (
-                <div style={{ display: "grid", gap: "0.5rem" }}>
+                <div className="grid gap-2">
                   {studentAccessList.map(a => (
-                    <div key={a.courseId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                      <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{a.courseName}</span>
-                      <button onClick={e => { e.stopPropagation(); handleRevokeAccess(a.courseId, a.courseName); }} style={{ ...btnDanger, fontSize: "0.78rem", fontWeight: 600, padding: "8px 14px" }}>Revoke</button>
+                    <div key={a.courseId} className="flex items-center justify-between px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]">
+                      <span className="text-sm font-semibold">{a.courseName}</span>
+                      <button onClick={e => { e.stopPropagation(); handleRevokeAccess(a.courseId, a.courseName); }} className="bg-[rgba(231,76,60,0.1)] border border-[rgba(231,76,60,0.2)] rounded-lg px-3 py-1.5 cursor-pointer text-[#e74c3c] text-xs font-bold">Revoke</button>
                     </div>
                   ))}
                 </div>
@@ -386,19 +366,19 @@ export default function AdminDashboard() {
       )}
 
       {activeSection === "access" && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
-          <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#9b59b6" /> Grant Course Access</h3>
-            <form onSubmit={handleGrantAccess} style={{ display: "grid", gap: "1rem" }}>
+        <div className="grid gap-6">
+          <div className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl p-6">
+            <h3 className="text-base font-bold font-['Poppins'] flex items-center gap-2 mb-4"><ShieldCheck size={16} className="text-[#9b59b6]" /> Grant Course Access</h3>
+            <form onSubmit={handleGrantAccess} className="grid gap-4">
               <div>
-                <label style={labelStyle}>Student</label>
+                <label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Student</label>
                 <UserSearch onSelect={u => setSelectedUserId(u.id)} selectedUserId={selectedUserId} />
               </div>
               <div>
-                <label style={labelStyle}>Courses <span style={{ fontWeight: 400, color: "#555" }}>(select multiple)</span></label>
+                <label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Courses <span className="font-normal text-[#555]">(select multiple)</span></label>
                 <CourseMultiSelect selectedIds={grantCourseIds} onChange={setGrantCourseIds} placeholder="Search and select courses..." />
               </div>
-              <button type="submit" disabled={granting || !selectedUserId || grantCourseIds.length === 0} style={{ ...btnPrimary, background: "#9b59b6", opacity: !selectedUserId || grantCourseIds.length === 0 ? 0.5 : 1 }}>{granting ? <><Loader2 size={16} /> Granting...</> : <><ShieldCheck size={16} /> Grant Access to {grantCourseIds.length > 0 ? `${grantCourseIds.length} course(s)` : "Course"}</>}</button>
+              <button type="submit" disabled={granting || !selectedUserId || grantCourseIds.length === 0} className="bg-[#9b59b6] text-white border-none rounded-lg px-6 py-3 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50">{granting ? <><Loader2 size={16} className="animate-spin" /> Granting...</> : <><ShieldCheck size={16} /> Grant Access to {grantCourseIds.length > 0 ? `${grantCourseIds.length} course(s)` : "Course"}</>}</button>
             </form>
           </div>
         </div>
