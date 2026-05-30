@@ -42,7 +42,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
   const sectionTitle = title ?? navItems.find(n => n.id === activeSection)?.label ?? activeSection;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif", display: "flex" }}>
+    <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <aside className={`fixed top-0 left-0 bottom-0 z-40 w-[240px] bg-[#0a0a0a] border-r border-[rgba(255,255,255,0.06)] flex flex-col transition-transform duration-250 ease ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
@@ -78,7 +78,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
         </div>
       </aside>
 
-      <div style={{ minWidth: 0, width: "calc(100% - 240px)" }} className="md:ml-[240px]">
+      <div className="md:ml-[240px]">
         <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20, gap: 8 }}>
           <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", padding: 4 }}><Menu size={22} /></button>
           {onBack && (
