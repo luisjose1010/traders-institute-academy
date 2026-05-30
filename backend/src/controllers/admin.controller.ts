@@ -39,7 +39,7 @@ export async function getAllCourses(req: Request, res: Response) {
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
   const search = (req.query.search as string) || "";
-  const status = req.query.status as "active" | "archived" | undefined;
+  const status = req.query.status as "active" | "inactive" | "archived" | undefined;
 
   const result = await adminService.getAllCourses(page, limit, search, status);
   res.json(result);

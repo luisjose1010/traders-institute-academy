@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
-  const [courseTab, setCourseTab] = useState<"active" | "archived">("active");
+  const [courseTab, setCourseTab] = useState<"active" | "inactive" | "archived">("active");
 
   const [coursePage, setCoursePage] = useState(1);
   const [courseLimit, setCourseLimit] = useState(10);
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
     try { await api.admin.updateCourse(editingCourse.id, { name: editName, description: editDesc, status: editStatus as "active" | "inactive" }); showMsg("success", "Course updated"); setEditingCourse(null); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setSaving(false);
   };
-  const handleArchiveCourse = async (courseId: number, name: string) => { if (!confirm(`Archive "${name}"?`)) return; try { await api.admin.deleteCourse(courseId); showMsg("success", "Archived: " + name); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
+  const handleArchiveCourse = async (courseId: number, name: string) => { if (!confirm(`Archive "${name}"?`)) return; try { await api.admin.updateCourse(courseId, { status: "archived" }); showMsg("success", "Archived: " + name); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
   const loadLessons = (courseId: number, courseName: string) => { setManagingCourseId(courseId); setManagingCourseName(courseName); setLessonsLoading(true); api.admin.getLessonsByCourse(courseId).then(d => setCourseLessons(d)).catch(() => {}).finally(() => setLessonsLoading(false)); };
   const handleAddLesson = async (e: React.FormEvent) => {
     e.preventDefault(); if (!managingCourseId || !newLessonTitle || !newLessonUrl) return;
@@ -219,7 +219,8 @@ export default function AdminDashboard() {
                 <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-2">Status</label>
                   <select value={editStatus} onChange={e => setEditStatus(e.target.value)} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-3 text-white text-sm outline-none cursor-pointer">
                     <option value="active">Active</option>
-                    <option value="inactive">Archived</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </div>
                 <div className="flex gap-3">
@@ -234,12 +235,13 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="flex bg-[rgba(255,255,255,0.03)] rounded-lg border border-[rgba(255,255,255,0.06)]">
                 <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} className={`px-4 py-2 rounded-lg border-none text-sm cursor-pointer ${courseTab === "active" ? "bg-[rgba(201,168,76,0.12)] text-[#C9A84C] font-bold" : "bg-transparent text-[#666] font-normal"}`}>Active</button>
+                <button onClick={() => { setCourseTab("inactive"); setCoursePage(1); }} className={`px-4 py-2 rounded-lg border-none text-sm cursor-pointer ${courseTab === "inactive" ? "bg-[rgba(155,89,182,0.12)] text-[#9b59b6] font-bold" : "bg-transparent text-[#555] font-normal"}`}>Inactive</button>
                 <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} className={`px-4 py-2 rounded-lg border-none text-sm cursor-pointer ${courseTab === "archived" ? "bg-[rgba(255,255,255,0.06)] text-[#888] font-bold" : "bg-transparent text-[#555] font-normal"}`}>Archived</button>
               </div>
               <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-1.5 text-[#fff] text-sm outline-none w-[200px]" />
               <button onClick={loadCourses} className="ml-auto bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888]"><RefreshCw size={14} /></button>
             </div>
-            {coursesLoading && courses.length === 0 ? <p className="text-[#555]">Loading...</p> : courses.length === 0 ? <p className="text-[#555] py-4">{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
+            {coursesLoading && courses.length === 0 ? <p className="text-[#555]">Loading...</p> : courses.length === 0 ? <p className="text-[#555] py-4">{courseTab === "active" ? "No active courses." : courseTab === "inactive" ? "No inactive courses." : "No archived courses."}</p> : (
               <>
                 <div className="grid gap-2">
                   {courses.map(c => (
@@ -252,7 +254,7 @@ export default function AdminDashboard() {
                         <div className="text-xs text-[#555]">{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded ${c.status === "active" ? "bg-[rgba(39,174,96,0.12)] text-[#27ae60]" : "bg-[rgba(255,255,255,0.05)] text-[#555]"}`}>{c.status.toUpperCase()}</span>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded ${c.status === "active" ? "bg-[rgba(39,174,96,0.12)] text-[#27ae60]" : c.status === "inactive" ? "bg-[rgba(155,89,182,0.12)] text-[#9b59b6]" : "bg-[rgba(255,255,255,0.05)] text-[#555]"}`}>{c.status.toUpperCase()}</span>
                         <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg p-2 cursor-pointer text-[#888]"><ListVideo size={16} /></button>
                         {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" className="bg-none border border-[rgba(231,76,60,0.2)] rounded-lg p-2 cursor-pointer text-[#e74c3c]"><Trash2 size={14} /></button>}
                       </div>

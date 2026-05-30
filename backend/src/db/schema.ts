@@ -12,7 +12,7 @@ export const courses = sqliteTable("courses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  status: text("status").notNull().default("active"),
+  status: text("status", { enum: ["active", "inactive", "archived"] }).notNull().default("active"),
 });
 
 export const lessons = sqliteTable("lessons", {

@@ -30,12 +30,12 @@ export function CourseMultiSelect({
 
   useEffect(() => {
     if (!query.trim()) {
-      setFiltered(courses.filter(c => c.status === "active"));
+      setFiltered(courses);
       return;
     }
     const q = query.toLowerCase();
     setFiltered(courses.filter(c =>
-      c.status === "active" && (c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q))
+      c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
     ));
   }, [query, courses]);
 
@@ -62,9 +62,13 @@ export function CourseMultiSelect({
       {selectedCourses.length > 0 ? (
         <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.1)] min-h-[42px]">
           {selectedCourses.map(c => (
-            <span key={c.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.2)] text-[#C9A84C] text-sm">
+            <span
+              key={c.id}
+              onClick={() => remove(c.id)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.2)] text-[#C9A84C] text-sm cursor-pointer hover:bg-[rgba(201,168,76,0.2)] transition-colors"
+            >
               {c.name}
-              <button onClick={() => remove(c.id)} className="hover:text-white transition-colors"><X size={12} /></button>
+              <X size={12} />
             </span>
           ))}
           <button

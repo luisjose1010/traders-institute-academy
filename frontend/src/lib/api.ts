@@ -12,6 +12,8 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  role?: string;
 }
 
 function buildQuery(params: PaginationParams): string {
@@ -19,6 +21,8 @@ function buildQuery(params: PaginationParams): string {
   if (params.page) qs.set("page", String(params.page));
   if (params.limit) qs.set("limit", String(params.limit));
   if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
+  if (params.role) qs.set("role", params.role);
   return qs.toString() ? `?${qs.toString()}` : "";
 }
 

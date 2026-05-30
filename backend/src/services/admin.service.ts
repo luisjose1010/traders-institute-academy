@@ -81,10 +81,10 @@ export async function getStudentAccess(userId: string) {
     .where(eq(courseAccess.userId, userId));
 }
 
-export async function getAllCourses(page = 1, limit = 10, search = "", status?: "active" | "archived"): Promise<PaginatedResult<typeof courses.$inferSelect>> {
+export async function getAllCourses(page = 1, limit = 10, search = "", status?: "active" | "inactive" | "archived"): Promise<PaginatedResult<typeof courses.$inferSelect>> {
   const offset = (page - 1) * limit;
   const searchPattern = search ? `%${search}%` : undefined;
-  const dbStatus = status === "archived" ? "inactive" : status;
+  const dbStatus = status;
 
   const whereClause = searchPattern
     ? and(dbStatus ? eq(courses.status, dbStatus) : undefined, like(courses.name, searchPattern))

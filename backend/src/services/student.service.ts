@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, not } from "drizzle-orm";
 import { db } from "../db/index";
 import { courses, lessons, courseAccess, lessonProgress } from "../db/schema";
 
@@ -12,7 +12,7 @@ export async function getMyCourses(userId: string) {
     })
     .from(courses)
     .innerJoin(courseAccess, eq(courses.id, courseAccess.courseId))
-    .where(eq(courseAccess.userId, userId));
+    .where(and(eq(courseAccess.userId, userId), not(eq(courses.status, "archived"))));
 }
 
 export async function getCourse(userId: string, courseId: number) {
@@ -37,7 +37,7 @@ export async function getCourse(userId: string, courseId: number) {
       status: courses.status,
     })
     .from(courses)
-    .where(eq(courses.id, courseId))
+    .where(and(eq(courses.id, courseId), not(eq(courses.status, "archived"))))
     .limit(1);
 
   return course ?? null;
@@ -56,6 +56,14 @@ export async function getCourseLessons(userId: string, courseId: number) {
     .limit(1);
 
   if (!access) return null;
+
+  const [course] = await db
+    .select({ status: courses.status })
+    .from(courses)
+    .where(eq(courses.id, courseId))
+    .limit(1);
+
+  if (course?.status === "archived") return null;
 
   return db
     .select()

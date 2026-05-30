@@ -10,7 +10,7 @@ export const createUserSchema = z.object({
 export const createCourseSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  status: z.enum(["active", "inactive"]).default("active"),
+  status: z.enum(["active", "inactive", "archived"]).default("active"),
 });
 
 export const grantAccessSchema = z.object({
@@ -25,7 +25,7 @@ export type GrantAccessInput = z.infer<typeof grantAccessSchema>;
 export const updateCourseSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
-  status: z.enum(["active", "inactive"]).optional(),
+  status: z.enum(["active", "inactive", "archived"]).optional(),
 });
 
 export const courseIdParamsSchema = z.object({
