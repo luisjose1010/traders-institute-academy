@@ -67,6 +67,9 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
           })}
         </nav>
         <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.06)]">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg bg-none border-none text-[#555] text-xs cursor-pointer hover:text-[#888] transition-colors">
+            <ArrowLeft size={14} /> Back to site
+          </button>
           <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] mb-1.5">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: isAdmin ? "linear-gradient(135deg, #e74c3c, #c0392b)" : "linear-gradient(135deg, #C9A84C, #8a6a20)", color: isAdmin ? "#fff" : "#000" }}>{user?.initials ?? "?"}</div>
             <div className="min-w-0">
