@@ -1,6 +1,6 @@
 # SPEC — Traders Institute Academy
 
-§G: Trading academy platform — landing page, student portal, admin dashboard. Monorepo pnpm, Vite frontend + Express backend, Turso DB, Vercel serverless.
+§G: Trading academy platform — landing page, student portal, admin dashboard. Monorepo pnpm, Vite frontend + Express backend, Turso DB, Vercel serverless. Deployment reference → `VERCEL.md`.
 
 ---
 
@@ -193,6 +193,7 @@ traders-institute-academy/
 | V23 | `VITE_API_URL` baked at build time → change requires redeploy |
 | V24 | `api/index.js` strips trailing slash from `VITE_API_URL` → prevents `//api/` double slash |
 | V25 | CORS allows `*` origin → open to all when `CORS_ORIGIN=*` |
+| V26 | Auth state uses React Context → single shared state, not independent per component |
 
 ---
 
@@ -257,6 +258,7 @@ traders-institute-academy/
 | T48 | x | unified .env + .env.example at project root for Vercel deploy | |
 | T49 | x | Vercel CORS fix: allow `*` origin + strip trailing slash from API_BASE | V24, V25 |
 | T50 | x | Vercel CJS fix: backend → CommonJS, api/index.js → require(../backend/dist/app.js) | V22, C12 |
+| T51 | x | convert useAuth to React Context → single shared state, fix stale auth after login | V26 |
 
 ---
 
@@ -270,4 +272,5 @@ traders-institute-academy/
 | B4 | 2026-05-30 | CORS preflight blocked: wrong `VITE_API_URL` domain + double slash `//api/auth/login` | Set correct env vars in Vercel, strip trailing slash, allow `CORS_ORIGIN=*` |
 | B5 | 2026-05-30 | `ERR_REQUIRE_ESM`: root `"type":"module"` treated api/index.js as ESM → can't require backend ESM | Remove `"type":"module"` from root+backend, compile backend to CJS |
 | B6 | 2026-05-30 | `ERR_MODULE_NOT_FOUND`: api/index.ts imported `../backend/src/app` → TS source not bundled at runtime | Change to `require("../backend/dist/app.js")` → import compiled CJS output |
+| B7 | 2026-05-30 | Nav click → landing reload: `useAuth` was plain hook with independent state per component; `Router`'s `user` stayed null after `LoginModal` login → redirected back to `/` | Convert to React Context (`AuthProvider`) → single shared state |
 

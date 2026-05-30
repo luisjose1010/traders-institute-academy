@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, createContext, useContext, type ReactNode } from "react";
 import { api } from "@/lib/api";
 
 const TOKEN_KEY = "tia_token";
@@ -11,6 +11,16 @@ export interface AuthUser {
   role: "admin" | "student";
   initials: string;
 }
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getStoredUser(): AuthUser | null {
   try {
@@ -35,7 +45,7 @@ function makeInitials(name: string): string {
     : name.slice(0, 2).toUpperCase();
 }
 
-export function useAuth() {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(getStoredUser);
 
   const login = useCallback(async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
@@ -64,5 +74,15 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  return { user, login, logout, isAuthenticated: user !== null, isAdmin: user?.role === "admin" };
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: user !== null, isAdmin: user?.role === "admin" }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }
