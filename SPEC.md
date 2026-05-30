@@ -1,6 +1,6 @@
 # SPEC — Traders Institute Academy
 
-§G: Trading academy platform — landing page, student portal, admin dashboard. Monorepo pnpm, Vite frontend + Express backend, Turso DB, Vercel serverless. Deployment reference → `VERCEL.md`.
+§G: Trading academy platform — landing page, student portal, admin dashboard. Monorepo pnpm, Vite frontend + Express backend, Turso DB, Vercel serverless. Deployment reference → `VERCEL.md`. Courses have 3 states: active (grant access, student viewable), inactive (no new access, existing students viewable), archived (hidden, no access).
 
 ---
 
@@ -33,10 +33,10 @@ api: PUT  /api/auth/profile                → 200 {id,name,email,role} (auth JW
 api: POST /api/auth/login                 → 200 {token, user:{id,name,email,role}} ∈ 401
 api: POST /api/auth/forgot-password       → 200 {sent:true} (body: {email})
 api: POST /api/auth/reset-password        → 200 {reset:true} (body: {token,password})
-api: GET  /api/admin/courses?page&limit&search&status → 200 {items,total,page,limit,totalPages} (admin JWT, paginated)
-api: POST /api/admin/courses              → 201 {id,name,description,status} (admin JWT)
-api: PUT  /api/admin/courses/:id          → 200 {id,name,description,status} ∈ 404 (admin JWT)
-api: DELETE /api/admin/courses/:id        → 200 {id,name,description,status:inactive} ∈ 404 (admin JWT, soft delete)
+api: GET  /api/admin/courses?page&limit&search&status → 200 {items,total,page,limit,totalPages} (admin JWT, paginated, status∈{active,inactive,archived})
+api: POST /api/admin/courses              → 201 {id,name,description,status∈{active,inactive,archived}} (admin JWT)
+api: PUT  /api/admin/courses/:id          → 200 {id,name,description,status∈{active,inactive,archived}} ∈ 404 (admin JWT)
+api: DELETE /api/admin/courses/:id        → 200 {id,name,description,status:archived} ∈ 404 (admin JWT, soft delete → archived)
 api: GET  /api/admin/courses/:id/lessons  → 200 [{id,courseId,title,videoUrl,orderIndex}] (admin JWT)
 api: POST /api/admin/courses/:id/lessons  → 201 {id,courseId,title,videoUrl,orderIndex} (admin JWT)
 api: PUT  /api/admin/lessons/:id          → 200 {id,title,videoUrl,orderIndex} ∈ 404 (admin JWT)
@@ -63,7 +63,7 @@ api: PUT  /api/notifications/read-all     → 200 {marked:true} (auth JWT)
 
 ```
 table: users         → id(text pk), name, email(unique), password_hash, role(admin|student)
-table: courses       → id(int pk auto), name, description, status(active|inactive)
+table: courses       → id(int pk auto), name, description, status(active|inactive|archived)
 table: lessons       → id(int pk auto), course_id(fk→courses), title, video_url, order_index
 table: course_access → user_id(fk→users), course_id(fk→courses), unique(user_id,course_id)
 table: lesson_progress → user_id(fk→users), lesson_id(fk→lessons), completed_at(timestamp), unique(user_id,lesson_id)
@@ -180,7 +180,7 @@ traders-institute-academy/
 | V10 | login → `POST /api/auth/login` → store token+user → redirect `/dashboard` |
 | V11 | `VITE_API_URL` ? → defaults to `http://localhost:3000` in `api.ts` |
 | V12 | ⊥ course_access duplicate → unique(user_id, course_id) |
-| V13 | course status ∈ {active, inactive} |
+| V13 | course status ∈ {active, inactive, archived} |
 | V14 | user role ∈ {admin, student} |
 | V15 | `GET /api/admin/courses` → paginated `{items,total,page,limit,totalPages}` + query: `page`, `limit`(≤50), `search`, `status` |
 | V16 | `GET /api/admin/users` → paginated `{items,total,page,limit,totalPages}` + query: `page`, `limit`(≤50), `search`, `role` |
@@ -194,6 +194,9 @@ traders-institute-academy/
 | V24 | `api/index.js` strips trailing slash from `VITE_API_URL` → prevents `//api/` double slash |
 | V25 | CORS allows `*` origin → open to all when `CORS_ORIGIN=*` |
 | V26 | Auth state uses React Context → single shared state, not independent per component |
+| V27 | Course status ∈ {active, inactive, archived} → 3 distinct states, archived excluded from student views |
+| V28 | `buildQuery` must serialize ALL PaginationParams fields → page, limit, search, status, role |
+| V29 | CourseMultiSelect → entire tag clickable for removal, only active courses selectable |
 
 ---
 
@@ -259,6 +262,11 @@ traders-institute-academy/
 | T49 | x | Vercel CORS fix: allow `*` origin + strip trailing slash from API_BASE | V24, V25 |
 | T50 | x | Vercel CJS fix: backend → CommonJS, api/index.js → require(../backend/dist/app.js) | V22, C12 |
 | T51 | x | convert useAuth to React Context → single shared state, fix stale auth after login | V26 |
+| T52 | x | fix buildQuery → serialize status and role params (root cause of Archived filter not working) | V28 |
+| T53 | x | add 3rd course state: inactive (no new access, existing students can view) + archived (hidden) | V27 |
+| T54 | x | admin course tabs → 3 pills (Active/Inactive/Archived) with distinct colors | V27 |
+| T55 | x | student services → exclude archived courses from my-courses, getCourse, getCourseLessons | V27 |
+| T56 | x | CourseMultiSelect → entire tag clickable (cursor-pointer + hover), only active courses loaded | V29 |
 
 ---
 
@@ -273,4 +281,5 @@ traders-institute-academy/
 | B5 | 2026-05-30 | `ERR_REQUIRE_ESM`: root `"type":"module"` treated api/index.js as ESM → can't require backend ESM | Remove `"type":"module"` from root+backend, compile backend to CJS |
 | B6 | 2026-05-30 | `ERR_MODULE_NOT_FOUND`: api/index.ts imported `../backend/src/app` → TS source not bundled at runtime | Change to `require("../backend/dist/app.js")` → import compiled CJS output |
 | B7 | 2026-05-30 | Nav click → landing reload: `useAuth` was plain hook with independent state per component; `Router`'s `user` stayed null after `LoginModal` login → redirected back to `/` | Convert to React Context (`AuthProvider`) → single shared state |
+| B8 | 2026-05-30 | Archived tab → all active courses shown: `buildQuery` only serialized page/limit/search, ignoring status and role params → query param dropped, API returned unfiltered results | Added status+role to buildQuery + invariant V28 |
 
