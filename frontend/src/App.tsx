@@ -1,23 +1,40 @@
+import { Suspense, lazy, type ComponentType } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
-import StudentDashboard from "@/pages/StudentDashboard";
-import AdminDashboard from "@/pages/AdminDashboard";
-import CourseDetail from "@/pages/CourseDetail";
-import ResetPassword from "@/pages/ResetPassword";
 import { useAuth } from "@/hooks/useAuth";
+import NotFound from "@/pages/not-found";
+
+const Home = lazy(() => import("@/pages/Home"));
+const StudentDashboard = lazy(() => import("@/pages/StudentDashboard"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component, requireRole }: { component: () => React.ReactElement; requireRole?: "admin" | "student" }) {
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+        <span className="text-[#555] text-sm">Loading...</span>
+      </div>
+    </div>
+  );
+}
+
+function ProtectedRoute({ component: Component, requireRole }: { component: ComponentType<any>; requireRole?: "admin" | "student" }) {
   const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) return <Redirect to="/" />;
   if (requireRole && user?.role !== requireRole) return <Redirect to="/dashboard" />;
-  return <Component />;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  );
 }
 
 function Router() {
@@ -25,13 +42,25 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/">
+        <Suspense fallback={<PageLoader />}>
+          <Home />
+        </Suspense>
+      </Route>
+      <Route path="/reset-password">
+        <Suspense fallback={<PageLoader />}>
+          <ResetPassword />
+        </Suspense>
+      </Route>
       <Route path="/dashboard/course/:id">
         {() => {
           if (!isAuthenticated) return <Redirect to="/" />;
           if (isAdmin) return <Redirect to="/dashboard" />;
-          return <CourseDetail />;
+          return (
+            <Suspense fallback={<PageLoader />}>
+              <CourseDetail />
+            </Suspense>
+          );
         }}
       </Route>
       <Route path="/dashboard">
