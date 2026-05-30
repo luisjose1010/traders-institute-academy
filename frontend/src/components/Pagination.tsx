@@ -21,7 +21,7 @@ const btnActive: React.CSSProperties = {
 const btnDisabled: React.CSSProperties = { ...btnStyle, opacity: 0.3, cursor: "not-allowed" };
 
 export function Pagination({ page, totalPages, total, limit, onPageChange, onLimitChange, limitOptions = [5, 10, 20, 50] }: PaginationProps) {
-  if (totalPages <= 1) return null;
+  if (total === 0) return null;
 
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
