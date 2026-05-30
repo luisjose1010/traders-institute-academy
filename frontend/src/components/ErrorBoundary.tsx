@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error?.message}
           </pre>
           <button
-            onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = "/"; }}
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.replace("/"); }}
             style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
           >
             Go Home
