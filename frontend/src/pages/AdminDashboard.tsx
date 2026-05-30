@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const [newStudentPass, setNewStudentPass] = useState("");
   const [creatingStudent, setCreatingStudent] = useState(false);
   const [lastStudentId, setLastStudentId] = useState<string | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [grantCourseId, setGrantCourseId] = useState("");
@@ -286,32 +287,37 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          {lastStudentId && (
-            <div style={{ ...cardStyle, background: "rgba(39,174,96,0.05)", border: "1px solid rgba(39,174,96,0.15)", padding: "1rem 1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <CheckCircle2 size={16} color="#27ae60" />
-                <span style={{ fontSize: "0.85rem", color: "#27ae60", fontWeight: 600 }}>Student created! ID:</span>
-                <code style={{ color: "#C9A84C", background: "rgba(201,168,76,0.1)", padding: "2px 8px", borderRadius: 4, fontSize: "0.78rem" }}>{lastStudentId}</code>
-              </div>
-            </div>
-          )}
-
           <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
               <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students ({students.length})</h3>
-              <button onClick={loadStudents} style={btnGhost}><RefreshCw size={14} /></button>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                <input value={studentSearch} onChange={e => setStudentSearch(e.target.value)} placeholder="Search by name or email..." style={{ ...inputStyle, width: 220, padding: "6px 12px", fontSize: "0.82rem" }} />
+                <button onClick={loadStudents} style={btnGhost}><RefreshCw size={14} /></button>
+              </div>
             </div>
             {students.length === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : (
               <div style={{ display: "grid", gap: "0.5rem" }}>
-                {students.map(s => (
-                  <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
-                      <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                {students.filter(s => {
+                  if (!studentSearch) return true;
+                  const q = studentSearch.toLowerCase();
+                  return s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
+                }).map(s => (
+                  <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
+                        {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
+                        <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                      <button onClick={() => loadStudentAccess(s.id, s.name)} title="View Access" style={{ ...btnGhost, padding: "8px" }}><Eye size={16} /></button>
-                      <button onClick={() => { navigator.clipboard.writeText(s.id); showMsg("success", "ID copied"); }} style={{ ...btnGhost, padding: "8px", fontSize: "0.72rem" }}>Copy ID</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
+                      <span style={{ fontSize: "0.72rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
+                      <Eye size={14} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
                     </div>
                   </div>
                 ))}
@@ -325,12 +331,17 @@ export default function AdminDashboard() {
                 <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#C9A84C" /> {viewingAccessName}</h3>
                 <button onClick={() => setViewingAccessUserId(null)} style={btnGhost}><X size={14} /></button>
               </div>
-              {accessLoading ? <p style={{ color: "#555" }}>Loading...</p> : studentAccessList.length === 0 ? <p style={{ color: "#555" }}>No course access.</p> : (
+              {accessLoading ? <p style={{ color: "#555" }}>Loading...</p> : studentAccessList.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "1.5rem" }}>
+                  <p style={{ color: "#555", marginBottom: "0.75rem" }}>No course access yet.</p>
+                  <button onClick={() => setActiveSection("access")} style={{ ...btnPrimary, background: "#9b59b6", fontSize: "0.82rem" }}>Grant Access</button>
+                </div>
+              ) : (
                 <div style={{ display: "grid", gap: "0.5rem" }}>
                   {studentAccessList.map(a => (
                     <div key={a.courseId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                      <div><span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{a.courseName}</span><span style={{ fontSize: "0.7rem", color: "#555", marginLeft: 8 }}>#{a.courseId}</span></div>
-                      <button onClick={() => handleRevokeAccess(a.courseId, a.courseName)} style={{ ...btnDanger, fontSize: "0.78rem", fontWeight: 600, padding: "8px 14px" }}>Revoke</button>
+                      <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{a.courseName}</span>
+                      <button onClick={e => { e.stopPropagation(); handleRevokeAccess(a.courseId, a.courseName); }} style={{ ...btnDanger, fontSize: "0.78rem", fontWeight: 600, padding: "8px 14px" }}>Revoke</button>
                     </div>
                   ))}
                 </div>
