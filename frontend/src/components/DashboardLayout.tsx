@@ -78,7 +78,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
         </div>
       </aside>
 
-      <div style={{ flex: 1, minWidth: 0 }} className="md:ml-[240px]">
+      <div style={{ minWidth: 0, width: "calc(100% - 240px)" }} className="md:ml-[240px]">
         <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20, gap: 8 }}>
           <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", padding: 4 }}><Menu size={22} /></button>
           {onBack && (
@@ -92,7 +92,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
             {isAdmin && <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "3px 8px", borderRadius: 4 }}>ADMIN</span>}
           </div>
         </header>
-        <main style={{ padding: "1.5rem 2rem" }} className="md:ml-[240px]">
+        <main style={{ padding: "1.5rem 2rem" }}>
           {children}
         </main>
       </div>
