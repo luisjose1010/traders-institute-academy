@@ -86,8 +86,9 @@ env: VITE_API_URL        ! (frontend, baked at build time, default http://localh
 
 ```
 route: /              → Home (landing page, public)
-route: /dashboard     → AdminDashboard ∈ StudentDashboard (role-based, protected)
-route: /dashboard/course/:id → CourseDetail (video player + lesson list)
+route: /dashboard             → AdminDashboard ∈ StudentDashboard (role-based, protected)
+route: /dashboard/students/:id → StudentEditorModal (admin only, info + courses tabs)
+route: /dashboard/course/:id  → CourseDetail (video player + lesson list)
 route: /reset-password/:token → ResetPassword (public)
 route: *              → NotFound (404)
 ```
@@ -99,6 +100,7 @@ route: *              → NotFound (404)
 | DashboardLayout | components/DashboardLayout.tsx | Shared sidebar+header for all dashboard views |
 | ProfileEditor | components/ProfileEditor.tsx | Shared profile form (admin + student) |
 | Pagination | components/Pagination.tsx | Reusable pagination with page size selector |
+| StudentEditorModal | components/StudentEditorModal.tsx | Modal with Info + Courses tabs, URL-driven state |
 | UserSearch | components/UserSearch.tsx | Student search dropdown (admin only) |
 | NotificationBell | components/NotificationBell.tsx | Bell icon + dropdown with mark-read |
 | ErrorBoundary | components/ErrorBoundary.tsx | React error boundary with recovery |
@@ -197,6 +199,7 @@ traders-institute-academy/
 | V27 | Course status ∈ {active, inactive, archived} → 3 distinct states, archived excluded from student views |
 | V28 | `buildQuery` must serialize ALL PaginationParams fields → page, limit, search, status, role |
 | V29 | CourseMultiSelect → entire tag clickable for removal, only active courses selectable |
+| V30 | Student editing uses URL routing → `/dashboard/students/:id` opens modal, modal has Info + Courses tabs |
 
 ---
 
@@ -267,6 +270,7 @@ traders-institute-academy/
 | T54 | x | admin course tabs → 3 pills (Active/Inactive/Archived) with distinct colors | V27 |
 | T55 | x | student services → exclude archived courses from my-courses, getCourse, getCourseLessons | V27 |
 | T56 | x | CourseMultiSelect → entire tag clickable (cursor-pointer + hover), only active courses loaded | V29 |
+| T57 | x | StudentEditorModal: tabs (Info + Courses), URL routing `/dashboard/students/:id`, compact modal UI | V30 |
 
 ---
 
