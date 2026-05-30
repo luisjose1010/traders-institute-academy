@@ -6,7 +6,7 @@ import { ProfileEditor } from "@/components/ProfileEditor";
 import { Pagination } from "@/components/Pagination";
 import { UserSearch } from "@/components/UserSearch";
 import {
-  Plus, UserPlus, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, Eye, ShieldCheck, GraduationCap, Users, Archive
+  Plus, UserPlus, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Pencil, Trash2, ListVideo, Eye, ShieldCheck, GraduationCap, Users, Archive
 } from "lucide-react";
 
 interface Course { id: number; name: string; description: string; status: string; }
@@ -160,11 +160,11 @@ export default function AdminDashboard() {
 
       {activeSection === "dashboard" && !managingCourseId && (
         <>
-          <div style={{ marginBottom: "2rem" }}>
+          <div style={{ marginBottom: "1.5rem" }}>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
             <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Manage courses, students, and access.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 220px))", gap: "1rem", marginBottom: "1.5rem" }}>
             {[
               { label: "Courses", value: courses.filter(c => c.status === "active").length, icon: BookOpen, color: "#C9A84C" },
               { label: "Archived", value: courses.filter(c => c.status !== "active").length, icon: Archive, color: "#666" },
@@ -179,15 +179,10 @@ export default function AdminDashboard() {
               </div>
             ); })}
           </div>
-          <div style={{ ...cardStyle, textAlign: "center", padding: "2.5rem" }}>
-            <Database size={40} color="#333" style={{ marginBottom: 12 }} />
-            <h3 style={{ color: "#888", margin: "0 0 8px" }}>Quick Actions</h3>
-            <p style={{ color: "#555", fontSize: "0.85rem", marginBottom: "1.5rem" }}>Use the sidebar to navigate between sections.</p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => setActiveSection("courses")} style={{ ...btnPrimary, fontSize: "0.85rem" }}>Courses</button>
-              <button onClick={() => setActiveSection("students")} style={{ background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.25)", color: "#27ae60", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Students</button>
-              <button onClick={() => setActiveSection("access")} style={{ background: "rgba(155,89,182,0.12)", border: "1px solid rgba(155,89,182,0.25)", color: "#9b59b6", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Grant Access</button>
-            </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button onClick={() => setActiveSection("courses")} style={{ ...btnPrimary, fontSize: "0.85rem" }}>Manage Courses</button>
+            <button onClick={() => setActiveSection("students")} style={{ background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.25)", color: "#27ae60", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Manage Students</button>
+            <button onClick={() => setActiveSection("access")} style={{ background: "rgba(155,89,182,0.12)", border: "1px solid rgba(155,89,182,0.25)", color: "#9b59b6", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Grant Access</button>
           </div>
         </>
       )}

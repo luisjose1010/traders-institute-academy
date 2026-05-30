@@ -27,7 +27,9 @@
 api: GET  /api/health                     → 200 {status:"ok"}
 api: PUT  /api/auth/profile                → 200 {id,name,email,role} (auth JWT, body: {name?,password?})
 api: POST /api/auth/login                 → 200 {token, user:{id,name,email,role}} ∈ 401
-api: GET  /api/admin/courses              → 200 [{id,name,description,status}] (admin JWT)
+api: POST /api/auth/forgot-password       → 200 {sent:true} (body: {email})
+api: POST /api/auth/reset-password        → 200 {reset:true} (body: {token,password})
+api: GET  /api/admin/courses?page&limit&search&status → 200 {items,total,page,limit,totalPages} (admin JWT, paginated)
 api: POST /api/admin/courses              → 201 {id,name,description,status} (admin JWT)
 api: PUT  /api/admin/courses/:id          → 200 {id,name,description,status} ∈ 404 (admin JWT)
 api: DELETE /api/admin/courses/:id        → 200 {id,name,description,status:inactive} ∈ 404 (admin JWT, soft delete)
@@ -35,7 +37,7 @@ api: GET  /api/admin/courses/:id/lessons  → 200 [{id,courseId,title,videoUrl,o
 api: POST /api/admin/courses/:id/lessons  → 201 {id,courseId,title,videoUrl,orderIndex} (admin JWT)
 api: PUT  /api/admin/lessons/:id          → 200 {id,title,videoUrl,orderIndex} ∈ 404 (admin JWT)
 api: DELETE /api/admin/lessons/:id        → 200 {id} ∈ 404 (admin JWT)
-api: GET  /api/admin/users                → 200 [{id,name,email,role}] (admin JWT)
+api: GET  /api/admin/users?page&limit&search&role → 200 {items,total,page,limit,totalPages} (admin JWT, paginated)
 api: POST /api/admin/users                → 201 {id,name,email,role} (admin JWT)
 api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
 api: POST /api/admin/revoke-access        → 200 {revoked:true} (admin JWT)
@@ -46,6 +48,10 @@ api: GET  /api/student/course/:id/lessons → 200 [{id,title,videoUrl,orderIndex
 api: GET  /api/student/course/:id/progress → 200 {courseId,total,completed,percent} ∈ 403 (student JWT + access)
 api: POST /api/student/course/:id/complete-lesson → 200 {lessonId,completed:true} ∈ 403 (student JWT + access)
 api: GET  /api/student/progress           → 200 [{lessonId,completedAt}] (student JWT)
+api: GET  /api/notifications              → 200 [{id,title,message,read,createdAt}] (auth JWT)
+api: GET  /api/notifications/unread-count → 200 {count} (auth JWT)
+api: PUT  /api/notifications/:id/read     → 200 {id} (auth JWT)
+api: PUT  /api/notifications/read-all     → 200 {marked:true} (auth JWT)
 ```
 
 ### Database (Turso / LibSQL)
@@ -72,35 +78,70 @@ env: VITE_API_URL        ? (frontend, default http://localhost:3000)
 ### Frontend Routes
 
 ```
-route: /            → Home (landing page, public)
-route: /dashboard   → AdminDashboard ∈ StudentDashboard (role-based, protected)
-route: *            → NotFound (404)
+route: /              → Home (landing page, public)
+route: /dashboard     → AdminDashboard ∈ StudentDashboard (role-based, protected)
+route: /dashboard/course/:id → CourseDetail (video player + lesson list)
+route: /reset-password/:token → ResetPassword (public)
+route: *              → NotFound (404)
 ```
 
-### File Structure
+### Key Components (non-landing)
+
+| Component | Path | Purpose |
+|---|---|---|
+| DashboardLayout | components/DashboardLayout.tsx | Shared sidebar+header for all dashboard views |
+| ProfileEditor | components/ProfileEditor.tsx | Shared profile form (admin + student) |
+| Pagination | components/Pagination.tsx | Reusable pagination with page size selector |
+| UserSearch | components/UserSearch.tsx | Student search dropdown (admin only) |
+| NotificationBell | components/NotificationBell.tsx | Bell icon + dropdown with mark-read |
+| ErrorBoundary | components/ErrorBoundary.tsx | React error boundary with recovery |
+
+### shadcn/ui Components (kept / removed)
+
+| Kept (13) | Removed (40) |
+|---|---|
+| accordion, button, card, dialog, input, label, separator, skeleton, textarea, toast, toaster, toggle, tooltip | alert, alert-dialog, aspect-ratio, avatar, badge, breadcrumb, button-group, calendar, carousel, chart, checkbox, collapsible, command, context-menu, drawer, dropdown-menu, empty, field, form, hover-card, input-group, input-otp, item, kbd, menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, sheet, sidebar, slider, sonner, spinner, switch, table, tabs, toggle-group |
+
+### Radix Packages
+
+| Kept (8) | Removed (19) |
+|---|---|
+| react-accordion, react-dialog, react-label, react-separator, react-slot, react-toast, react-toggle, react-tooltip | react-alert-dialog, react-aspect-ratio, react-avatar, react-checkbox, react-collapsible, react-context-menu, react-dropdown-menu, react-hover-card, react-menubar, react-navigation-menu, react-popover, react-progress, react-radio-group, react-scroll-area, react-select, react-slider, react-switch, react-tabs, react-toggle-group |
 
 ```
 traders-institute-academy/
 ├── pnpm-workspace.yaml
-├── package.json              # root scripts
+├── package.json
 ├── tsconfig.base.json
 ├── .gitignore
+├── SPEC.md
 ├── api/
-│   └── index.ts             # Vercel serverless handler
-├── frontend/                # Vite + React
+│   └── index.ts
+├── frontend/
 │   ├── src/
-│   │   ├── lib/api.ts       # typed fetch client
-│   │   ├── hooks/useAuth.ts # auth state + JWT
+│   │   ├── lib/api.ts
+│   │   ├── hooks/useAuth.ts
+│   │   ├── App.tsx
 │   │   ├── pages/
 │   │   │   ├── Home.tsx
 │   │   │   ├── AdminDashboard.tsx
 │   │   │   ├── StudentDashboard.tsx
+│   │   │   ├── CourseDetail.tsx
+│   │   │   ├── ResetPassword.tsx
 │   │   │   └── not-found.tsx
 │   │   └── components/
-│   │       ├── landing/     # landing sections
-│   │       └── ui/          # shadcn/ui
+│   │       ├── landing/ (Navbar, Hero, TheEdge, CourseModules, SocialProof,
+│   │       │              EnrollmentPath, FAQ, FinalCTA, Footer,
+│   │       │              LoginModal, ForgotPasswordModal)
+│   │       ├── ui/ (13 shadcn/ui components)
+│   │       ├── DashboardLayout.tsx
+│   │       ├── ProfileEditor.tsx
+│   │       ├── Pagination.tsx
+│   │       ├── UserSearch.tsx
+│   │       ├── NotificationBell.tsx
+│   │       └── ErrorBoundary.tsx
 │   └── vite.config.ts
-└── backend/                 # Express + Turso
+└── backend/
     └── src/
         ├── routes/
         ├── middlewares/
@@ -131,6 +172,12 @@ traders-institute-academy/
 | V12 | ⊥ course_access duplicate → unique(user_id, course_id) |
 | V13 | course status ∈ {active, inactive} |
 | V14 | user role ∈ {admin, student} |
+| V15 | `GET /api/admin/courses` → paginated `{items,total,page,limit,totalPages}` + query: `page`, `limit`(≤50), `search`, `status` |
+| V16 | `GET /api/admin/users` → paginated `{items,total,page,limit,totalPages}` + query: `page`, `limit`(≤50), `search`, `role` |
+| V17 | Dashboard → sidebar-only nav on desktop, hamburger on mobile |
+| V18 | Profile editor → shared component, PUT `/api/auth/profile` |
+| V19 | ⊥ unused shadcn/ui components → removed 40, kept 13 with active imports |
+| V20 | ⊥ orphaned Radix packages → removed 19, kept 8 matching kept UI components |
 
 ---
 
@@ -180,6 +227,14 @@ traders-institute-academy/
 | T33 | x | error boundaries + toast notifications on API errors | C1 |
 | T34 | x | SEO meta tags + opengraph on landing | C1 |
 | T35 | x | admin lessons manager (add/edit/delete lessons per course) | V2 |
+| T36 | x | backend pagination: `GET /api/admin/courses?page&limit&search&status` + `GET /api/admin/users?page&limit&search&role` | V15, V16 |
+| T37 | x | frontend Pagination component with page size selector (5/10/20/50) | V15, V16 |
+| T38 | x | shared ProfileEditor component (admin + student, PUT /api/auth/profile) | V18 |
+| T39 | x | sidebar-only desktop nav (removed navbar buttons, sidebar fixed 240px) | V17 |
+| T40 | x | fix landing links: Student Login in footer opens modal, Secure Your Spot opens modal | |
+| T41 | x | purge unused shadcn/ui components (53→13) + orphaned Radix packages (27→8) | V19, V20 |
+| T42 | x | admin overview compact: stat cards max-width 220px, quick actions as button row | |
+| T43 | x | remove UUID display from admin UI, add student search + click-to-view-access | |
 
 ---
 
