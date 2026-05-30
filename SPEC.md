@@ -16,6 +16,8 @@
 | C6 | Auth: JWT Bearer token, 7d expiry, role in payload |
 | C7 | Backend layered: Routes → Middlewares → Controllers → Services → DB |
 | C8 | Node.js ≥22, pnpm ≥10 |
+| C9 | Email: Resend (free tier → only delivers to verified domain or account email `luis06jose@gmail.com`) |
+| C10 | Payment: manual verification via admin panel (create student → grant access after payment confirmed) |
 
 ---
 
@@ -39,6 +41,7 @@ api: PUT  /api/admin/lessons/:id          → 200 {id,title,videoUrl,orderIndex}
 api: DELETE /api/admin/lessons/:id        → 200 {id} ∈ 404 (admin JWT)
 api: GET  /api/admin/users?page&limit&search&role → 200 {items,total,page,limit,totalPages} (admin JWT, paginated)
 api: POST /api/admin/users                → 201 {id,name,email,role} (admin JWT)
+api: PUT  /api/admin/users/:id            → 200 {id,name,email,role} ∈ 404 (admin JWT, body: {name?,email?,password?})
 api: POST /api/admin/grant-access         → 201 {granted:true} (admin JWT)
 api: POST /api/admin/revoke-access        → 200 {revoked:true} (admin JWT)
 api: GET  /api/admin/users/:userId/access → 200 [{courseId,courseName}] (admin JWT)
@@ -178,6 +181,7 @@ traders-institute-academy/
 | V18 | Profile editor → shared component, PUT `/api/auth/profile` |
 | V19 | ⊥ unused shadcn/ui components → removed 40, kept 13 with active imports |
 | V20 | ⊥ orphaned Radix packages → removed 19, kept 8 matching kept UI components |
+| V21 | Admin can edit student accounts → `PUT /api/admin/users/:id` (name?, email?, password?) |
 
 ---
 
@@ -235,12 +239,16 @@ traders-institute-academy/
 | T41 | x | purge unused shadcn/ui components (53→13) + orphaned Radix packages (27→8) | V19, V20 |
 | T42 | x | admin overview compact: stat cards max-width 220px, quick actions as button row | |
 | T43 | x | remove UUID display from admin UI, add student search + click-to-view-access | |
+| T44 | x | admin edit student accounts — PUT /api/admin/users/:id, inline edit form | V21 |
+| T45 | x | course multi-select autocomplete for Grant Access — supports batch granting | |
+| T46 | x | migrate AdminDashboard, StudentDashboard, DashboardLayout to Tailwind v4 | |
 
 ---
 
-## §B — Bugs
+## §B — Bugs / Known Limitations
 
 | id | date | cause | fix |
 |---|---|---|---|
-| | | | |
+| B1 | 2026-05-29 | Resend free tier: emails only deliver to verified domain or account email (`luis06jose@gmail.com`) | Verify domain in Resend dashboard or upgrade to paid tier |
+| B2 | 2026-05-29 | `db.$count` doesn't exist in Drizzle ORM | Use `sql<number>\`count(*)\`` instead |
 
