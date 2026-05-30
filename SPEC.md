@@ -11,7 +11,7 @@
 | C1 | Frontend: Vite 7, React 19.1, Tailwind v4, shadcn/ui (new-york), wouter, @tanstack/react-query |
 | C2 | Backend: Express 4, Turso (LibSQL), Drizzle ORM, zod, jsonwebtoken, bcryptjs |
 | C3 | Monorepo: pnpm workspaces (`frontend`, `backend`), shared `tsconfig.base.json` |
-| C4 | Deployment: frontend → Vercel static, backend → Vercel serverless (`api/index.ts`) |
+| C4 | Deployment: frontend → Vercel static, backend → Vercel serverless (`api/index.js` using require() of compiled CJS dist) |
 | C5 | Theme: dark-only (#080808 bg, #C9A84C gold primary, #e74c3c admin red) |
 | C6 | Auth: JWT Bearer token, 7d expiry, role in payload |
 | C7 | Backend layered: Routes → Middlewares → Controllers → Services → DB |
@@ -19,6 +19,7 @@
 | C9 | Email: Resend (free tier → only delivers to verified domain or account email `luis06jose@gmail.com`) |
 | C10 | Payment: manual verification via admin panel (create student → grant access after payment confirmed) |
 | C11 | Build: lazy-loaded routes (React.lazy + Suspense), code-split chunks per page |
+| C12 | Vercel serverless: backend compiles to CommonJS (`module:commonjs`), root + backend ⊥ `"type":"module"`, api/index.js uses `require()` |
 
 ---
 
@@ -74,9 +75,11 @@ table: lesson_progress → user_id(fk→users), lesson_id(fk→lessons), complet
 env: TURSO_DATABASE_URL  ! (backend)
 env: TURSO_AUTH_TOKEN    ! (backend)
 env: JWT_SECRET          ! (backend)
+env: RESEND_API_KEY      ! (backend, email delivery)
+env: FRONTEND_URL        ! (backend, for email reset links)
 env: PORT                ? (backend, default 3000)
-env: CORS_ORIGIN         ? (backend, comma-separated origins, default localhost:5173,3000)
-env: VITE_API_URL        ? (frontend, default http://localhost:3000)
+env: CORS_ORIGIN         ? (backend, comma-separated origins or *, default localhost:5173,3000)
+env: VITE_API_URL        ! (frontend, baked at build time, default http://localhost:3000)
 ```
 
 ### Frontend Routes
@@ -119,8 +122,9 @@ traders-institute-academy/
 ├── tsconfig.base.json
 ├── .gitignore
 ├── SPEC.md
+├── VERCEL.md
 ├── api/
-│   └── index.ts
+│   └── index.js                          ← Vercel serverless (CJS, require compiled dist)
 ├── frontend/
 │   ├── src/
 │   │   ├── lib/api.ts
@@ -144,16 +148,18 @@ traders-institute-academy/
 │   │       ├── UserSearch.tsx
 │   │       ├── NotificationBell.tsx
 │   │       └── ErrorBoundary.tsx
-│   └── vite.config.ts
+│   └── vite.config.ts                    ← outDir → ../dist/
+├── dist/                                  ← Vercel outputDirectory (static)
 └── backend/
-    └── src/
-        ├── routes/
-        ├── middlewares/
-        ├── controllers/
-        ├── services/
-        ├── schemas/
-        ├── db/schema.ts
-        └── lib/jwt.ts
+    ├── src/
+    │   ├── routes/
+    │   ├── middlewares/
+    │   ├── controllers/
+    │   ├── services/
+    │   ├── schemas/
+    │   ├── db/schema.ts
+    │   └── lib/jwt.ts
+    └── dist/                              ← tsc output (CommonJS)
 ```
 
 ---
@@ -183,6 +189,10 @@ traders-institute-academy/
 | V19 | ⊥ unused shadcn/ui components → removed 40, kept 13 with active imports |
 | V20 | ⊥ orphaned Radix packages → removed 19, kept 8 matching kept UI components |
 | V21 | Admin can edit student accounts → `PUT /api/admin/users/:id` (name?, email?, password?) |
+| V22 | Vercel serverless → backend compiles to CJS, root+backend ⊥ `"type":"module"`, api/index.js `require()` compiled dist |
+| V23 | `VITE_API_URL` baked at build time → change requires redeploy |
+| V24 | `api/index.js` strips trailing slash from `VITE_API_URL` → prevents `//api/` double slash |
+| V25 | CORS allows `*` origin → open to all when `CORS_ORIGIN=*` |
 
 ---
 
@@ -200,7 +210,7 @@ traders-institute-academy/
 | T6 | x | `POST /api/auth/login` — JWT auth | V6, V10 |
 | T7 | x | admin endpoints: create user, create course, grant access | V2, I.api |
 | T8 | x | student endpoints: my courses, course lessons with access check | V3, V4, I.api |
-| T9 | x | Vercel serverless wrapper (`api/index.ts`) | C4 |
+| T9 | x | Vercel serverless wrapper (`api/index.js` require compiled dist) | C4, C12, V22 |
 | T10 | x | seed: admin + test student + 4 courses + 15 lessons | |
 | T11 | x | `useAuth` hook → real API, JWT + role in localStorage | V7, V8 |
 | T12 | x | `LoginModal` → real API call, error handling | V10 |
@@ -245,6 +255,8 @@ traders-institute-academy/
 | T46 | x | migrate AdminDashboard, StudentDashboard, DashboardLayout to Tailwind v4 | |
 | T47 | x | lazy-load routes with React.lazy + Suspense for code splitting | |
 | T48 | x | unified .env + .env.example at project root for Vercel deploy | |
+| T49 | x | Vercel CORS fix: allow `*` origin + strip trailing slash from API_BASE | V24, V25 |
+| T50 | x | Vercel CJS fix: backend → CommonJS, api/index.js → require(../backend/dist/app.js) | V22, C12 |
 
 ---
 
@@ -255,4 +267,7 @@ traders-institute-academy/
 | B1 | 2026-05-29 | Resend free tier: emails only deliver to verified domain or account email (`luis06jose@gmail.com`) | Verify domain in Resend dashboard or upgrade to paid tier |
 | B2 | 2026-05-29 | `db.$count` doesn't exist in Drizzle ORM | Use `sql<number>\`count(*)\`` instead |
 | B3 | 2026-05-30 | Vercel deploy: pnpm ignores esbuild build scripts → vite fails silently | Added `pnpm.onlyBuiltDependencies: ["esbuild"]` to root package.json |
+| B4 | 2026-05-30 | CORS preflight blocked: wrong `VITE_API_URL` domain + double slash `//api/auth/login` | Set correct env vars in Vercel, strip trailing slash, allow `CORS_ORIGIN=*` |
+| B5 | 2026-05-30 | `ERR_REQUIRE_ESM`: root `"type":"module"` treated api/index.js as ESM → can't require backend ESM | Remove `"type":"module"` from root+backend, compile backend to CJS |
+| B6 | 2026-05-30 | `ERR_MODULE_NOT_FOUND`: api/index.ts imported `../backend/src/app` → TS source not bundled at runtime | Change to `require("../backend/dist/app.js")` → import compiled CJS output |
 
