@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { LoginModal } from "./LoginModal";
 import { CheckCircle2, ChevronRight, Clock, Users, Zap, Lock } from "lucide-react";
 
 const included = [
@@ -72,10 +73,12 @@ export function EnrollmentPath() {
                 ))}
               </div>
 
-              <Button size="lg" className="w-full h-13 text-base group shadow-[0_0_25px_-8px_hsl(var(--primary))] hover:shadow-[0_0_40px_-8px_hsl(var(--primary))] transition-all">
-                Secure Your Spot
-                <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <LoginModal>
+                <Button size="lg" className="w-full h-13 text-base group shadow-[0_0_25px_-8px_hsl(var(--primary))] hover:shadow-[0_0_40px_-8px_hsl(var(--primary))] transition-all">
+                  Secure Your Spot
+                  <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </LoginModal>
 
               <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Secure checkout</span>
