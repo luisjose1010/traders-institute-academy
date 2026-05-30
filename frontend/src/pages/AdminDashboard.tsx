@@ -140,12 +140,12 @@ export default function AdminDashboard() {
   const loadStudentAccess = (userId: string, name: string) => { setViewingAccessUserId(userId); setViewingAccessName(name); setAccessLoading(true); api.admin.getStudentAccess(userId).then(d => setStudentAccessList(d)).catch(() => {}).finally(() => setAccessLoading(false)); };
   const handleRevokeAccess = async (courseId: number, courseName: string) => { if (!viewingAccessUserId) return; if (!confirm(`Revoke "${courseName}"?`)) return; try { await api.admin.revokeAccess({ userId: viewingAccessUserId, courseId }); showMsg("success", "Revoked: " + courseName); loadStudentAccess(viewingAccessUserId, viewingAccessName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
 
-  const inputStyle: React.CSSProperties = { background: "#080808", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.75rem 1rem", color: "#fff", fontSize: "0.9rem", width: "100%", outline: "none" };
-  const cardStyle: React.CSSProperties = { background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.5rem" };
-  const labelStyle: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", color: "#999", textTransform: "uppercase" as const, marginBottom: 8, display: "block" };
-  const btnPrimary: React.CSSProperties = { background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 };
-  const btnDanger: React.CSSProperties = { background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#e74c3c" };
-  const btnGhost: React.CSSProperties = { background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#888" };
+  const inputStyle: React.CSSProperties = { background: "#080808", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.55rem 0.75rem", color: "#fff", fontSize: "0.82rem", width: "100%", outline: "none" };
+  const cardStyle: React.CSSProperties = { background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "1rem 1.25rem" };
+  const labelStyle: React.CSSProperties = { fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.06em", color: "#888", textTransform: "uppercase" as const, marginBottom: 4, display: "block" };
+  const btnPrimary: React.CSSProperties = { background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.6rem 1.25rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 };
+  const btnDanger: React.CSSProperties = { background: "none", border: "1px solid rgba(231,76,60,0.2)", borderRadius: 8, padding: "5px 8px", cursor: "pointer", color: "#e74c3c", fontSize: "0.75rem" };
+  const btnGhost: React.CSSProperties = { background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "5px 8px", cursor: "pointer", color: "#888", fontSize: "0.75rem" };
 
   const layoutTitle = managingCourseId ? `${managingCourseName} — Lessons` : undefined;
 
@@ -160,43 +160,43 @@ export default function AdminDashboard() {
 
       {activeSection === "dashboard" && !managingCourseId && (
         <>
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 4px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
-            <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>Manage courses, students, and access.</p>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 2px", fontFamily: "Poppins, sans-serif" }}>Admin Dashboard</h1>
+            <p style={{ color: "#555", margin: 0, fontSize: "0.8rem" }}>Manage courses, students, and access.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem", marginBottom: "1.25rem" }}>
             {[
               { label: "Courses", value: courses.filter(c => c.status === "active").length, icon: BookOpen, color: "#C9A84C" },
               { label: "Archived", value: courses.filter(c => c.status !== "active").length, icon: Archive, color: "#666" },
               { label: "Students", value: students.length, icon: Users, color: "#27ae60" },
             ].map(stat => { const StatIcon = stat.icon; return (
               <div key={stat.label} style={cardStyle}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 500 }}>{stat.label.toUpperCase()}</span>
-                  <StatIcon size={14} color={stat.color} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: "0.65rem", color: "#555", fontWeight: 500 }}>{stat.label.toUpperCase()}</span>
+                  <StatIcon size={13} color={stat.color} />
                 </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: 700, color: stat.color, fontFamily: "Poppins, sans-serif" }}>{stat.value}</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: stat.color, fontFamily: "Poppins, sans-serif" }}>{stat.value}</div>
               </div>
             ); })}
           </div>
-          <div style={{ ...cardStyle, textAlign: "center", padding: "2.5rem" }}>
-            <Database size={40} color="#333" style={{ marginBottom: 12 }} />
-            <h3 style={{ color: "#888", margin: "0 0 8px" }}>Quick Actions</h3>
-            <p style={{ color: "#555", fontSize: "0.85rem", marginBottom: "1.5rem" }}>Use the sidebar to navigate between sections.</p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => setActiveSection("courses")} style={{ ...btnPrimary, fontSize: "0.85rem" }}>Courses</button>
-              <button onClick={() => setActiveSection("students")} style={{ background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.25)", color: "#27ae60", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Students</button>
-              <button onClick={() => setActiveSection("access")} style={{ background: "rgba(155,89,182,0.12)", border: "1px solid rgba(155,89,182,0.25)", color: "#9b59b6", borderRadius: 8, padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Grant Access</button>
+          <div style={{ ...cardStyle, textAlign: "center", padding: "1.5rem" }}>
+            <Database size={28} color="#333" style={{ marginBottom: 8 }} />
+            <h3 style={{ color: "#888", margin: "0 0 4px", fontSize: "0.9rem" }}>Quick Actions</h3>
+            <p style={{ color: "#555", fontSize: "0.78rem", marginBottom: "1rem" }}>Use the sidebar to navigate between sections.</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={() => setActiveSection("courses")} style={{ ...btnPrimary, fontSize: "0.8rem" }}>Courses</button>
+              <button onClick={() => setActiveSection("students")} style={{ background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.25)", color: "#27ae60", borderRadius: 8, padding: "0.55rem 1.25rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>Students</button>
+              <button onClick={() => setActiveSection("access")} style={{ background: "rgba(155,89,182,0.12)", border: "1px solid rgba(155,89,182,0.25)", color: "#9b59b6", borderRadius: 8, padding: "0.55rem 1.25rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>Grant Access</button>
             </div>
           </div>
         </>
       )}
 
       {activeSection === "courses" && !managingCourseId && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gap: "1rem" }}>
           <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><Plus size={16} color="#C9A84C" /> Create New Course</h3>
-            <form onSubmit={handleCreateCourse} style={{ display: "grid", gap: "0.75rem" }}>
+            <h3 style={{ margin: "0 0 0.75rem", fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><Plus size={14} color="#C9A84C" /> Create New Course</h3>
+            <form onSubmit={handleCreateCourse} style={{ display: "grid", gap: "0.6rem" }}>
               <div><label style={labelStyle}>Course Name</label><input value={newCourseName} onChange={e => setNewCourseName(e.target.value)} placeholder="e.g. Forex Fundamentals" style={inputStyle} required /></div>
               <div><label style={labelStyle}>Description</label><textarea value={newCourseDesc} onChange={e => setNewCourseDesc(e.target.value)} placeholder="What students will learn..." style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }} required /></div>
               <button type="submit" disabled={creatingCourse} style={btnPrimary}>{creatingCourse ? <><Loader2 size={16} /> Creating...</> : <><Plus size={16} /> Create Course</>}</button>
@@ -227,30 +227,30 @@ export default function AdminDashboard() {
           )}
 
           <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "0.75rem", flexWrap: "wrap" }}>
               <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-                <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "active" ? "rgba(201,168,76,0.12)" : "transparent", border: "none", color: courseTab === "active" ? "#C9A84C" : "#666", fontSize: "0.82rem", fontWeight: courseTab === "active" ? 700 : 400, cursor: "pointer" }}>Active</button>
-                <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "archived" ? "rgba(255,255,255,0.06)" : "transparent", border: "none", color: courseTab === "archived" ? "#888" : "#555", fontSize: "0.82rem", fontWeight: courseTab === "archived" ? 700 : 400, cursor: "pointer" }}>Archived</button>
+                <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} style={{ padding: "6px 12px", borderRadius: 8, background: courseTab === "active" ? "rgba(201,168,76,0.12)" : "transparent", border: "none", color: courseTab === "active" ? "#C9A84C" : "#666", fontSize: "0.78rem", fontWeight: courseTab === "active" ? 700 : 400, cursor: "pointer" }}>Active</button>
+                <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} style={{ padding: "6px 12px", borderRadius: 8, background: courseTab === "archived" ? "rgba(255,255,255,0.06)" : "transparent", border: "none", color: courseTab === "archived" ? "#888" : "#555", fontSize: "0.78rem", fontWeight: courseTab === "archived" ? 700 : 400, cursor: "pointer" }}>Archived</button>
               </div>
-              <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
-              <button onClick={loadCourses} style={{ ...btnGhost, marginLeft: "auto" }}><RefreshCw size={14} /></button>
+              <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." style={{ ...inputStyle, width: 180, padding: "5px 10px", fontSize: "0.78rem" }} />
+              <button onClick={loadCourses} style={{ ...btnGhost, marginLeft: "auto" }}><RefreshCw size={12} /></button>
             </div>
             {loading ? <p style={{ color: "#555" }}>Loading...</p> : courses.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
               <>
                 <div style={{ display: "grid", gap: "0.5rem" }}>
                   {courses.map(c => (
-                    <div key={c.id} onClick={() => startEdit(c)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: editingCourse?.id === c.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                    <div key={c.id} onClick={() => startEdit(c)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: editingCourse?.id === c.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                       onMouseLeave={e => (e.currentTarget.style.background = editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)")}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
-                        <div style={{ fontSize: "0.78rem", color: "#555" }}>{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
+                        <div style={{ fontSize: "0.88rem", fontWeight: 600, marginBottom: 1 }}>{c.name}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#555" }}>{c.description.slice(0, 80)}{c.description.length > 80 ? "..." : ""}</div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                        <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
-                        <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" style={{ ...btnGhost, padding: "8px" }}><ListVideo size={16} /></button>
-                        {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 10 }}>
+                        <span style={{ fontSize: "0.58rem", fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
+                        <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" style={{ ...btnGhost, padding: "5px" }}><ListVideo size={14} /></button>
+                        {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" style={{ ...btnDanger, padding: "5px" }}><Trash2 size={12} /></button>}
                       </div>
                     </div>
                   ))}
@@ -265,9 +265,10 @@ export default function AdminDashboard() {
       {activeSection === "courses" && managingCourseId && (
         <div style={{ display: "grid", gap: "1.5rem" }}>
           <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ListVideo size={16} color="#C9A84C" /> Lessons ({courseLessons.length})</h3>
-            </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ListVideo size={14} color="#C9A84C" /> Lessons ({courseLessons.length})</h3>
+                <button onClick={() => setManagingCourseId(null)} style={btnGhost}><X size={12} /></button>
+              </div>
             <form onSubmit={handleAddLesson} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: "0.5rem", marginBottom: "1.25rem" }}>
               <input value={newLessonTitle} onChange={e => setNewLessonTitle(e.target.value)} placeholder="Title" style={inputStyle} required />
               <input value={newLessonUrl} onChange={e => setNewLessonUrl(e.target.value)} placeholder="YouTube or video URL" style={inputStyle} required />
@@ -277,14 +278,14 @@ export default function AdminDashboard() {
             {lessonsLoading ? <p style={{ color: "#555" }}>Loading...</p> : courseLessons.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>No lessons yet. Add one above.</p> : (
               <div style={{ display: "grid", gap: "0.5rem" }}>
                 {courseLessons.map(l => (
-                  <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.75rem 1rem", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 700, width: 24, textAlign: "center" }}>{l.orderIndex}</span>
+                  <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "0.6rem 0.9rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <span style={{ fontSize: "0.65rem", color: "#555", fontWeight: 700, width: 20, textAlign: "center" }}>{l.orderIndex}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{l.title}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.videoUrl}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>{l.title}</div>
+                      <div style={{ fontSize: "0.68rem", color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.videoUrl}</div>
                     </div>
-                    <button onClick={() => startEditLesson(l)} style={{ ...btnGhost, padding: "8px" }}><Pencil size={14} /></button>
-                    <button onClick={() => handleDeleteLesson(l.id, l.title)} style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>
+                    <button onClick={() => startEditLesson(l)} style={{ ...btnGhost, padding: "4px" }}><Pencil size={12} /></button>
+                    <button onClick={() => handleDeleteLesson(l.id, l.title)} style={{ ...btnDanger, padding: "4px" }}><Trash2 size={12} /></button>
                   </div>
                 ))}
               </div>
@@ -308,10 +309,10 @@ export default function AdminDashboard() {
       )}
 
       {activeSection === "students" && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gap: "1rem" }}>
           <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><UserPlus size={16} color="#27ae60" /> Create Student</h3>
-            <form onSubmit={handleCreateStudent} style={{ display: "grid", gap: "0.75rem" }}>
+            <h3 style={{ margin: "0 0 0.75rem", fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><UserPlus size={14} color="#27ae60" /> Create Student</h3>
+            <form onSubmit={handleCreateStudent} style={{ display: "grid", gap: "0.6rem" }}>
               <div><label style={labelStyle}>Full Name</label><input value={newStudentName} onChange={e => setNewStudentName(e.target.value)} placeholder="John Doe" style={inputStyle} required /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div><label style={labelStyle}>Email</label><input type="email" value={newStudentEmail} onChange={e => setNewStudentEmail(e.target.value)} placeholder="john@example.com" style={inputStyle} required /></div>
@@ -322,33 +323,33 @@ export default function AdminDashboard() {
           </div>
 
           <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students</h3>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }} placeholder="Search by name..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
-                <button onClick={loadStudents} style={btnGhost}><RefreshCw size={14} /></button>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "0.75rem", flexWrap: "wrap" }}>
+              <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students</h3>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }} placeholder="Search by name..." style={{ ...inputStyle, width: 180, padding: "5px 10px", fontSize: "0.78rem" }} />
+                <button onClick={loadStudents} style={btnGhost}><RefreshCw size={12} /></button>
               </div>
             </div>
             {students.length === 0 && studentTotal === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : students.length === 0 ? <p style={{ color: "#555" }}>No results.</p> : (
               <>
                 <div style={{ display: "grid", gap: "0.5rem" }}>
                   {students.map(s => (
-                    <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                    <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 8, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                       onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
                           {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
-                          <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                          <div style={{ fontSize: "0.88rem", fontWeight: 600 }}>{s.name}</div>
+                          <div style={{ fontSize: "0.72rem", color: "#555" }}>{s.email}</div>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
-                        <span style={{ fontSize: "0.72rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
-                        <Eye size={14} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: "0.68rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
+                        <Eye size={13} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
                       </div>
                     </div>
                   ))}
@@ -360,9 +361,9 @@ export default function AdminDashboard() {
 
           {viewingAccessUserId && (
             <div style={{ ...cardStyle, border: "1px solid rgba(201,168,76,0.2)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#C9A84C" /> {viewingAccessName}</h3>
-                <button onClick={() => setViewingAccessUserId(null)} style={btnGhost}><X size={14} /></button>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={14} color="#C9A84C" /> {viewingAccessName}</h3>
+                <button onClick={() => setViewingAccessUserId(null)} style={btnGhost}><X size={12} /></button>
               </div>
               {accessLoading ? <p style={{ color: "#555" }}>Loading...</p> : studentAccessList.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "1.5rem" }}>
@@ -372,9 +373,9 @@ export default function AdminDashboard() {
               ) : (
                 <div style={{ display: "grid", gap: "0.5rem" }}>
                   {studentAccessList.map(a => (
-                    <div key={a.courseId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                      <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{a.courseName}</span>
-                      <button onClick={e => { e.stopPropagation(); handleRevokeAccess(a.courseId, a.courseName); }} style={{ ...btnDanger, fontSize: "0.78rem", fontWeight: 600, padding: "8px 14px" }}>Revoke</button>
+                    <div key={a.courseId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0.9rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                      <span style={{ fontSize: "0.82rem", fontWeight: 600 }}>{a.courseName}</span>
+                      <button onClick={e => { e.stopPropagation(); handleRevokeAccess(a.courseId, a.courseName); }} style={{ ...btnDanger, fontSize: "0.72rem", padding: "4px 10px" }}>Revoke</button>
                     </div>
                   ))}
                 </div>
@@ -385,10 +386,10 @@ export default function AdminDashboard() {
       )}
 
       {activeSection === "access" && (
-        <div style={{ display: "grid", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gap: "1rem" }}>
           <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={16} color="#9b59b6" /> Grant Course Access</h3>
-            <form onSubmit={handleGrantAccess} style={{ display: "grid", gap: "1rem" }}>
+            <h3 style={{ margin: "0 0 0.75rem", fontSize: "0.95rem", fontWeight: 700, fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><ShieldCheck size={14} color="#9b59b6" /> Grant Course Access</h3>
+            <form onSubmit={handleGrantAccess} style={{ display: "grid", gap: "0.75rem" }}>
               <div>
                 <label style={labelStyle}>Student</label>
                 <UserSearch onSelect={u => setSelectedUserId(u.id)} selectedUserId={selectedUserId} />

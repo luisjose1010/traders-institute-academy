@@ -38,9 +38,9 @@ export function Pagination({ page, totalPages, total, limit, onPageChange, onLim
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 0", flexWrap: "wrap", gap: 12 }}>
-      <div style={{ fontSize: "0.78rem", color: "#555" }}>
-        Showing {start}–{end} of {total}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ fontSize: "0.72rem", color: "#555" }}>
+        {start}–{end} of {total}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         {onLimitChange && (
