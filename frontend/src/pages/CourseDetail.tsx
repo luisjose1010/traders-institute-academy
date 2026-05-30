@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import { api } from "@/lib/api";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { ArrowLeft, Play, BookOpen, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 
@@ -30,56 +31,44 @@ export default function CourseDetail() {
       api.student.getCourseLessons(courseId),
       api.student.getCourseProgress(courseId),
     ])
-      .then(([c, l, p]) => {
-        setCourse(c);
-        setLessons(l);
-        setProgress(p);
-        if (l.length > 0) setActiveLesson(l[0]);
-      })
+      .then(([c, l, p]) => { setCourse(c); setLessons(l); setProgress(p); if (l.length > 0) setActiveLesson(l[0]); })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [courseId]);
 
   const refreshProgress = useCallback(async () => {
     if (!courseId) return;
-    try {
-      const p = await api.student.getCourseProgress(courseId);
-      setProgress(p);
-    } catch {}
+    try { const p = await api.student.getCourseProgress(courseId); setProgress(p); } catch {}
   }, [courseId]);
 
   const handleMarkComplete = async () => {
     if (!activeLesson || !courseId) return;
     setMarking(true);
-    try {
-      await api.student.markLessonComplete(courseId, activeLesson.id);
-      setCompletedIds(prev => new Set(prev).add(activeLesson.id));
-      await refreshProgress();
-    } catch {}
+    try { await api.student.markLessonComplete(courseId, activeLesson.id); setCompletedIds(prev => new Set(prev).add(activeLesson.id)); await refreshProgress(); } catch {}
     setMarking(false);
   };
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#080808", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <p style={{ color: "#555" }}>Loading course...</p>
-    </div>
+    <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title="Loading...">
+      <div style={{ textAlign: "center", padding: "4rem 0", color: "#555" }}>Loading course...</div>
+    </DashboardLayout>
   );
 
   if (error || !course) return (
-    <div style={{ minHeight: "100vh", background: "#080808", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-      <p style={{ color: "#e74c3c" }}>{error || "Course not found"}</p>
-      <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 16px", color: "#888", cursor: "pointer" }}>Back to Dashboard</button>
-    </div>
+    <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title="Error">
+      <div style={{ textAlign: "center", padding: "4rem 0" }}>
+        <p style={{ color: "#e74c3c", marginBottom: 16 }}>{error || "Course not found"}</p>
+        <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 16px", color: "#888", cursor: "pointer" }}>Back to Dashboard</button>
+      </div>
+    </DashboardLayout>
   );
 
   const isCurrentComplete = activeLesson ? completedIds.has(activeLesson.id) : false;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif" }}>
-      <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 20, gap: 12 }}>
-        <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><ArrowLeft size={18} /> <span style={{ fontSize: "0.85rem" }}>Back</span></button>
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)" }} />
-        <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{course.name}</span>
+    <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title={course.name}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "1.5rem" }}>
+        <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.82rem" }}><ArrowLeft size={16} /> Back</button>
         {progress && (
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 80, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
@@ -88,43 +77,29 @@ export default function CourseDetail() {
             <span style={{ fontSize: "0.72rem", color: "#C9A84C", fontWeight: 600 }}>{progress.percent}%</span>
           </div>
         )}
-      </header>
+      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", maxWidth: 1200, margin: "0 auto", padding: "0 1rem" }} className="lg:flex-row">
-        <div style={{ flex: 1, padding: "1.5rem 0" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }} className="lg:flex-row">
+        <div style={{ flex: 1 }}>
           {activeLesson ? (
             <>
               <VideoPlayer url={activeLesson.videoUrl} title={activeLesson.title} />
               <div style={{ padding: "1.25rem 0" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em", color: "#C9A84C" }}>LESSON {activeLesson.orderIndex}</span>
-                  {isCurrentComplete && (
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#27ae60", fontWeight: 600 }}>
-                      <CheckCircle2 size={13} /> Completed
-                    </span>
-                  )}
+                  {isCurrentComplete && <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#27ae60", fontWeight: 600 }}><CheckCircle2 size={13} /> Completed</span>}
                 </div>
                 <h2 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "0 0 0.5rem", fontFamily: "Poppins, sans-serif" }}>{activeLesson.title}</h2>
                 <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "1.25rem" }}>{course.description}</p>
                 {!isCurrentComplete && (
-                  <button
-                    onClick={handleMarkComplete}
-                    disabled={marking}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)",
-                      color: "#C9A84C", borderRadius: 8, padding: "10px 20px",
-                      fontSize: "0.85rem", fontWeight: 600, cursor: marking ? "not-allowed" : "pointer",
-                      opacity: marking ? 0.6 : 1,
-                    }}
-                  >
+                  <button onClick={handleMarkComplete} disabled={marking} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", color: "#C9A84C", borderRadius: 8, padding: "10px 20px", fontSize: "0.85rem", fontWeight: 600, cursor: marking ? "not-allowed" : "pointer", opacity: marking ? 0.6 : 1 }}>
                     {marking ? <><Loader2 size={15} /> Marking...</> : <><CheckCircle2 size={15} /> Mark as Complete</>}
                   </button>
                 )}
               </div>
             </>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2rem", textAlign: "center" }}>
+            <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
               <BookOpen size={40} color="#333" style={{ marginBottom: 16 }} />
               <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#888", marginBottom: 8 }}>No lessons available</h3>
               <p style={{ color: "#555", fontSize: "0.85rem" }}>This course has no lessons yet.</p>
@@ -133,34 +108,18 @@ export default function CourseDetail() {
         </div>
 
         <div style={{ width: "100%" }} className="lg:w-80">
-          <div style={{ padding: "1.25rem 1rem", borderLeft: "none" }} className="lg:border-l lg:border-[rgba(255,255,255,0.06)]">
+          <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.25rem 1rem" }}>
             <h3 style={{ fontSize: "0.85rem", fontWeight: 700, margin: "0 0 1rem", fontFamily: "Poppins, sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
               <BookOpen size={14} color="#C9A84C" /> Course Content
-              <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 400, marginLeft: "auto" }}>
-                {progress ? `${progress.completed}/${progress.total}` : lessons.length} lessons
-              </span>
+              <span style={{ fontSize: "0.7rem", color: "#555", fontWeight: 400, marginLeft: "auto" }}>{progress ? `${progress.completed}/${progress.total}` : lessons.length} lessons</span>
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {lessons.map(lesson => {
                 const active = activeLesson?.id === lesson.id;
                 const completed = completedIds.has(lesson.id);
                 return (
-                  <button
-                    key={lesson.id}
-                    onClick={() => setActiveLesson(lesson)}
-                    style={{
-                      display: "flex", alignItems: "flex-start", gap: 10,
-                      padding: "0.7rem 0.8rem", borderRadius: 8,
-                      background: active ? "rgba(201,168,76,0.08)" : "transparent",
-                      border: active ? "1px solid rgba(201,168,76,0.15)" : "1px solid transparent",
-                      color: active ? "#C9A84C" : completed ? "#27ae60" : "#888",
-                      cursor: "pointer", textAlign: "left", width: "100%",
-                      transition: "all 0.12s", fontSize: "0.82rem",
-                    }}
-                  >
-                    <span style={{ marginTop: 1, flexShrink: 0 }}>
-                      {completed ? <CheckCircle2 size={14} /> : active ? <Play size={14} /> : <Circle size={14} />}
-                    </span>
+                  <button key={lesson.id} onClick={() => setActiveLesson(lesson)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0.7rem 0.8rem", borderRadius: 8, background: active ? "rgba(201,168,76,0.08)" : "transparent", border: active ? "1px solid rgba(201,168,76,0.15)" : "1px solid transparent", color: active ? "#C9A84C" : completed ? "#27ae60" : "#888", cursor: "pointer", textAlign: "left" as const, width: "100%", transition: "all 0.12s", fontSize: "0.82rem" }}>
+                    <span style={{ marginTop: 1, flexShrink: 0 }}>{completed ? <CheckCircle2 size={14} /> : active ? <Play size={14} /> : <Circle size={14} />}</span>
                     <div>
                       <div style={{ fontWeight: active ? 600 : 400, lineHeight: 1.3 }}>{lesson.title}</div>
                       <div style={{ fontSize: "0.68rem", color: "#444", marginTop: 2 }}>Lesson {lesson.orderIndex}</div>
@@ -172,6 +131,6 @@ export default function CourseDetail() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
