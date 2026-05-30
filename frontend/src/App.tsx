@@ -70,6 +70,13 @@ function Router() {
           return <ProtectedRoute component={StudentDashboard} requireRole="student" />;
         }}
       </Route>
+      <Route path="/dashboard/students/:id">
+        {() => {
+          if (!isAuthenticated) return <Redirect to="/" />;
+          if (isAdmin) return <ProtectedRoute component={AdminDashboard} requireRole="admin" />;
+          return <Redirect to="/dashboard" />;
+        }}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
