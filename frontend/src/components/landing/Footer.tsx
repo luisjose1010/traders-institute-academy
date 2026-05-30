@@ -1,4 +1,6 @@
 import { Twitter, Youtube, Instagram, MessageCircle } from "lucide-react";
+import { LoginModal } from "./LoginModal";
+import { Button } from "@/components/ui/button";
 
 const socials = [
   { icon: Twitter, label: "Twitter / X", href: "#" },
@@ -41,7 +43,6 @@ export function Footer() {
                 { label: "Results", href: "#proof" },
                 { label: "Enrollment", href: "#enroll" },
                 { label: "FAQ", href: "#faq" },
-                { label: "Student Login", href: "#", onClick: true },
               ].map(item => (
                 <li key={item.label}>
                   <a href={item.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -49,6 +50,13 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <LoginModal>
+                  <Button variant="link" className="text-sm text-muted-foreground hover:text-primary transition-colors p-0 h-auto">
+                    Student Login
+                  </Button>
+                </LoginModal>
+              </li>
             </ul>
           </div>
 
