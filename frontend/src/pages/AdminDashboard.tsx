@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ProfileEditor } from "@/components/ProfileEditor";
 import { UserSearch } from "@/components/UserSearch";
 import {
   Plus, UserPlus, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, Eye, ShieldCheck, GraduationCap, Users, Archive
@@ -372,6 +373,8 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {activeSection === "profile" && <ProfileEditor />}
     </DashboardLayout>
   );
 }

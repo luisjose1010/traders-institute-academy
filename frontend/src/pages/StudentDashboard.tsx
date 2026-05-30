@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ProfileEditor } from "@/components/ProfileEditor";
 import {
   Clock, BookOpen, PlayCircle, GraduationCap, Settings
 } from "lucide-react";
@@ -30,11 +31,6 @@ export default function StudentDashboard() {
   const [progress, setProgress] = useState<Record<number, { total: number; completed: number; percent: number }>>({});
   const [loading, setLoading] = useState(true);
 
-  const [profileName, setProfileName] = useState("");
-  const [profilePass, setProfilePass] = useState("");
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileMsg, setProfileMsg] = useState<string | null>(null);
-
   useEffect(() => {
     api.student.getMyCourses().then(async d => {
       setCourses(d);
@@ -48,24 +44,6 @@ export default function StudentDashboard() {
   }, []);
 
   const handleCourseClick = (courseId: number) => { navigate(`/dashboard/course/${courseId}`); };
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profileName && !profilePass) return;
-    setSavingProfile(true);
-    try {
-      const data: { name?: string; password?: string } = {};
-      if (profileName) data.name = profileName;
-      if (profilePass) data.password = profilePass;
-      await api.auth.updateProfile(data);
-      setProfileMsg("Profile updated!");
-      setProfilePass("");
-      setTimeout(() => setProfileMsg(null), 3000);
-    } catch (err: unknown) { setProfileMsg(err instanceof Error ? err.message : "Failed"); }
-    setSavingProfile(false);
-  };
-
-  const inputStyle: React.CSSProperties = { background: "#080808", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "0.6rem 0.9rem", color: "#fff", fontSize: "0.85rem", width: "100%", outline: "none" };
-  const labelStyle: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase" as const, marginBottom: 6, display: "block" };
 
   return (
     <DashboardLayout activeSection={activeSection} onSection={setActiveSection}>
@@ -74,21 +52,7 @@ export default function StudentDashboard() {
         <p style={{ color: "#666", margin: 0, fontSize: "0.85rem" }}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
       </div>
 
-      {activeSection === "profile" && (
-        <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.5rem", maxWidth: 480 }}>
-          <h3 style={{ margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Profile</h3>
-          {profileMsg && <div style={{ padding: "0.6rem 0.8rem", borderRadius: 8, marginBottom: "1rem", background: profileMsg.includes("updated") ? "rgba(39,174,96,0.1)" : "rgba(231,76,60,0.1)", border: "1px solid " + (profileMsg.includes("updated") ? "rgba(39,174,96,0.3)" : "rgba(231,76,60,0.3)"), color: profileMsg.includes("updated") ? "#27ae60" : "#e74c3c", fontSize: "0.82rem" }}>{profileMsg}</div>}
-          <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ fontSize: "0.7rem", color: "#555", marginBottom: 4 }}>EMAIL</div>
-            <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{user?.email}</div>
-          </div>
-          <form onSubmit={handleSaveProfile} style={{ display: "grid", gap: "0.75rem" }}>
-            <div><label style={labelStyle}>Name</label><input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder={user?.name} style={inputStyle} /></div>
-            <div><label style={labelStyle}>New Password</label><input type="password" value={profilePass} onChange={e => setProfilePass(e.target.value)} placeholder="Leave blank to keep current" style={inputStyle} /></div>
-            <button type="submit" disabled={savingProfile} style={{ background: "#C9A84C", color: "#000", border: "none", borderRadius: 8, padding: "0.65rem", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>{savingProfile ? "Saving..." : "Save Changes"}</button>
-          </form>
-        </div>
-      )}
+      {activeSection === "profile" && <ProfileEditor />}
 
       {activeSection === "dashboard" && (
         loading ? (

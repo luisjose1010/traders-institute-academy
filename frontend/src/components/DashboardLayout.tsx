@@ -4,14 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 import {
   LogOut, LayoutDashboard, GraduationCap, Users, ShieldCheck,
-  Menu, X, User, Settings, ArrowLeft
+  Menu, X, User, ArrowLeft
 } from "lucide-react";
 
 const studentNav = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "courses", label: "My Courses", icon: GraduationCap },
   { id: "profile", label: "Profile", icon: User },
-  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 const adminNav = [
@@ -19,6 +18,7 @@ const adminNav = [
   { id: "courses", label: "Courses", icon: GraduationCap },
   { id: "students", label: "Students", icon: Users },
   { id: "access", label: "Grant Access", icon: ShieldCheck },
+  { id: "profile", label: "Profile", icon: User },
 ];
 
 export function DashboardLayout({ children, activeSection, onSection, title, onBack }: {
@@ -86,18 +86,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
               <ArrowLeft size={16} /> Back
             </button>
           )}
-          <span className="hidden md:inline" style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ccc" }}>{sectionTitle}</span>
-          <nav className="hidden md:flex" style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto", marginRight: "auto" }}>
-            {navItems.map(item => {
-              const active = activeSection === item.id;
-              const Icon = item.icon;
-              return (
-                <button key={item.id} onClick={() => { onSection(item.id); navigate("/dashboard"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, background: active ? accentBg : "transparent", border: active ? `1px solid ${accentBorder}` : "1px solid transparent", color: active ? accentColor : "#777", fontSize: "0.82rem", fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s" }}>
-                  <Icon size={15} />{item.label}
-                </button>
-              );
-            })}
-          </nav>
+          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ccc" }}>{sectionTitle}</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
             <NotificationBell />
             {isAdmin && <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "3px 8px", borderRadius: 4 }}>ADMIN</span>}
