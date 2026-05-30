@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [coursesLoading, setCoursesLoading] = useState(true);
   const [courseTab, setCourseTab] = useState<"active" | "archived">("active");
 
   const [coursePage, setCoursePage] = useState(1);
@@ -82,10 +82,10 @@ export default function AdminDashboard() {
   const showMsg = (type: "success" | "error", text: string) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
 
   const loadCourses = () => {
-    setLoading(true);
+    setCoursesLoading(true);
     api.admin.getAllCourses({ page: coursePage, limit: courseLimit, search: courseSearch, status: courseTab }).then(d => {
-      setCourses(d.items); setCourseTotal(d.total); setCourseTotalPages(d.totalPages); setLoading(false);
-    }).catch(() => setLoading(false));
+      setCourses(d.items); setCourseTotal(d.total); setCourseTotalPages(d.totalPages); setCoursesLoading(false);
+    }).catch(() => setCoursesLoading(false));
   };
   const loadStudents = () => {
     api.admin.getAllUsers({ page: studentPage, limit: studentLimit, search: studentSearch, role: "student" }).then(d => {
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
               <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." className="bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-1.5 text-[#fff] text-sm outline-none w-[200px]" />
               <button onClick={loadCourses} className="ml-auto bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888]"><RefreshCw size={14} /></button>
             </div>
-            {loading ? <p className="text-[#555]">Loading...</p> : courses.length === 0 ? <p className="text-[#555] py-4">{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
+            {coursesLoading && courses.length === 0 ? <p className="text-[#555]">Loading...</p> : courses.length === 0 ? <p className="text-[#555] py-4">{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
               <>
                 <div className="grid gap-2">
                   {courses.map(c => (

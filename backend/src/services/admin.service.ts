@@ -84,10 +84,11 @@ export async function getStudentAccess(userId: string) {
 export async function getAllCourses(page = 1, limit = 10, search = "", status?: "active" | "archived"): Promise<PaginatedResult<typeof courses.$inferSelect>> {
   const offset = (page - 1) * limit;
   const searchPattern = search ? `%${search}%` : undefined;
+  const dbStatus = status === "archived" ? "inactive" : status;
 
   const whereClause = searchPattern
-    ? and(status ? eq(courses.status, status) : undefined, like(courses.name, searchPattern))
-    : status ? eq(courses.status, status) : undefined;
+    ? and(dbStatus ? eq(courses.status, dbStatus) : undefined, like(courses.name, searchPattern))
+    : dbStatus ? eq(courses.status, dbStatus) : undefined;
 
   const items = await db
     .select()
