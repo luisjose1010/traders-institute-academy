@@ -18,6 +18,7 @@
 | C8 | Node.js ≥22, pnpm ≥10 |
 | C9 | Email: Resend (free tier → only delivers to verified domain or account email `luis06jose@gmail.com`) |
 | C10 | Payment: manual verification via admin panel (create student → grant access after payment confirmed) |
+| C11 | Build: lazy-loaded routes (React.lazy + Suspense), code-split chunks per page |
 
 ---
 
@@ -242,6 +243,8 @@ traders-institute-academy/
 | T44 | x | admin edit student accounts — PUT /api/admin/users/:id, inline edit form | V21 |
 | T45 | x | course multi-select autocomplete for Grant Access — supports batch granting | |
 | T46 | x | migrate AdminDashboard, StudentDashboard, DashboardLayout to Tailwind v4 | |
+| T47 | x | lazy-load routes with React.lazy + Suspense for code splitting | |
+| T48 | x | unified .env + .env.example at project root for Vercel deploy | |
 
 ---
 
