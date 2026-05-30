@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm run build:backend && pnpm run build:frontend",
+  "buildCommand": "pnpm --filter backend build && pnpm --filter frontend build",
   "outputDirectory": "frontend/dist",
   "installCommand": "pnpm install",
   "framework": null,
