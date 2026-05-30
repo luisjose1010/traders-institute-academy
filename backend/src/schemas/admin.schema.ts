@@ -54,3 +54,16 @@ export const lessonIdParamsSchema = z.object({
 export type CreateLessonInput = z.infer<typeof createLessonSchema>;
 export type UpdateLessonInput = z.infer<typeof updateLessonSchema>;
 export type LessonIdParams = z.infer<typeof lessonIdParamsSchema>;
+
+export const updateUserSchema = z.object({
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional(),
+});
+
+export const userIdParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type UserIdParams = z.infer<typeof userIdParamsSchema>;

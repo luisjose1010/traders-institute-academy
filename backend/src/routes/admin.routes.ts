@@ -10,6 +10,7 @@ router.use(authMiddleware, requireAdmin);
 router.get("/courses", adminController.getAllCourses);
 router.get("/users", adminController.getAllUsers);
 router.post("/users", adminController.createUser);
+router.put("/users/:id", adminController.updateUser);
 router.post("/courses", adminController.createCourse);
 router.put("/courses/:id", adminController.updateCourse);
 router.delete("/courses/:id", adminController.deleteCourse);

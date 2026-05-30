@@ -73,6 +73,12 @@ export default function AdminDashboard() {
   const [studentAccessList, setStudentAccessList] = useState<{ courseId: number; courseName: string }[]>([]);
   const [accessLoading, setAccessLoading] = useState(false);
 
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editStudentName, setEditStudentName] = useState("");
+  const [editStudentEmail, setEditStudentEmail] = useState("");
+  const [editStudentPass, setEditStudentPass] = useState("");
+  const [savingStudent, setSavingStudent] = useState(false);
+
   const showMsg = (type: "success" | "error", text: string) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
 
   const loadCourses = () => {
@@ -132,6 +138,23 @@ export default function AdminDashboard() {
   const handleDeleteLesson = async (lessonId: number, title: string) => { if (!confirm(`Delete "${title}"?`)) return; try { await api.admin.deleteLesson(lessonId); showMsg("success", "Lesson deleted"); if (managingCourseId) loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
   const loadStudentAccess = (userId: string, name: string) => { setViewingAccessUserId(userId); setViewingAccessName(name); setAccessLoading(true); api.admin.getStudentAccess(userId).then(d => setStudentAccessList(d)).catch(() => {}).finally(() => setAccessLoading(false)); };
   const handleRevokeAccess = async (courseId: number, courseName: string) => { if (!viewingAccessUserId) return; if (!confirm(`Revoke "${courseName}"?`)) return; try { await api.admin.revokeAccess({ userId: viewingAccessUserId, courseId }); showMsg("success", "Revoked: " + courseName); loadStudentAccess(viewingAccessUserId, viewingAccessName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
+
+  const startEditStudent = (s: Student) => { setEditingStudentId(s.id); setEditStudentName(s.name); setEditStudentEmail(s.email); setEditStudentPass(""); setViewingAccessUserId(null); };
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editingStudentId || (!editStudentName && !editStudentEmail && !editStudentPass)) return;
+    setSavingStudent(true);
+    try {
+      const data: { name?: string; email?: string; password?: string } = {};
+      if (editStudentName) data.name = editStudentName;
+      if (editStudentEmail) data.email = editStudentEmail;
+      if (editStudentPass) data.password = editStudentPass;
+      await api.admin.updateUser(editingStudentId, data);
+      showMsg("success", "Student updated!");
+      setEditingStudentId(null);
+      loadStudents();
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    setSavingStudent(false);
+  };
 
   const layoutTitle = managingCourseId ? `${managingCourseName} — Lessons` : undefined;
 
@@ -314,6 +337,29 @@ export default function AdminDashboard() {
               <>
                 <div className="grid gap-2">
                   {students.map(s => (
+                    editingStudentId === s.id ? (
+                      <div key={s.id} className="bg-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.2)] rounded-xl p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Pencil size={14} className="text-[#C9A84C]" />
+                          <h4 className="text-sm font-bold text-[#C9A84C] font-['Poppins']">Edit: {s.name}</h4>
+                          <button onClick={() => setEditingStudentId(null)} className="ml-auto bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2 py-1 cursor-pointer text-[#888]"><X size={14} /></button>
+                        </div>
+                        <form onSubmit={handleUpdateUser} className="grid gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-1.5">Name</label><input value={editStudentName} onChange={e => setEditStudentName(e.target.value)} placeholder={s.name} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-white text-sm outline-none" /></div>
+                            <div><label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-1.5">Email</label><input type="email" value={editStudentEmail} onChange={e => setEditStudentEmail(e.target.value)} placeholder={s.email} className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-white text-sm outline-none" /></div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold tracking-wide text-[#999] uppercase mb-1.5">New Password <span className="font-normal text-[#555]">(leave blank to keep)</span></label>
+                            <input type="password" value={editStudentPass} onChange={e => setEditStudentPass(e.target.value)} placeholder="Min 6 characters" className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-white text-sm outline-none" />
+                          </div>
+                          <div className="flex gap-3">
+                            <button type="submit" disabled={savingStudent} className="bg-[#C9A84C] text-black border-none rounded-lg px-5 py-2 font-bold text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">{savingStudent ? "Saving..." : "Save"}</button>
+                            <button type="button" onClick={() => setEditingStudentId(null)} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-5 py-2 cursor-pointer text-[#888] text-sm">Cancel</button>
+                          </div>
+                        </form>
+                      </div>
+                    ) : (
                     <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} className={`flex items-center justify-between px-4 py-4 rounded-lg cursor-pointer transition-all ${viewingAccessUserId === s.id ? "bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)]" : "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]"}`}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                       onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
@@ -328,11 +374,11 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        <span className={`text-xs ${viewingAccessUserId === s.id ? "text-[#C9A84C]" : "text-[#555]"}`}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
+                        <button onClick={e => { e.stopPropagation(); startEditStudent(s); }} title="Edit" className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg p-1.5 cursor-pointer text-[#888]"><Pencil size={13} /></button>
                         <Eye size={14} className={viewingAccessUserId === s.id ? "text-[#C9A84C]" : "text-[#555]"} />
                       </div>
                     </div>
-                  ))}
+                    )))}
                 </div>
                 <Pagination page={studentPage} totalPages={studentTotalPages} total={studentTotal} limit={studentLimit} onPageChange={setStudentPage} onLimitChange={l => { setStudentLimit(l); setStudentPage(1); }} />
               </>

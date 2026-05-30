@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createUserSchema, createCourseSchema, grantAccessSchema, updateCourseSchema, courseIdParamsSchema, createLessonSchema, updateLessonSchema, lessonIdParamsSchema } from "../schemas/admin.schema";
+import { createUserSchema, createCourseSchema, grantAccessSchema, updateCourseSchema, updateUserSchema, courseIdParamsSchema, userIdParamsSchema, createLessonSchema, updateLessonSchema, lessonIdParamsSchema } from "../schemas/admin.schema";
 import * as adminService from "../services/admin.service";
 
 export async function createUser(req: Request, res: Response) {
@@ -75,6 +75,28 @@ export async function updateCourse(req: Request, res: Response) {
   }
 
   res.json(course);
+}
+
+export async function updateUser(req: Request, res: Response) {
+  const params = userIdParamsSchema.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
+  }
+
+  const parsed = updateUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const user = await adminService.updateUser(params.data.id, parsed.data);
+  if (!user) {
+    res.status(404).json({ error: "User not found or no fields to update" });
+    return;
+  }
+
+  res.json(user);
 }
 
 export async function deleteCourse(req: Request, res: Response) {

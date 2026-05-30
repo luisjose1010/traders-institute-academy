@@ -89,6 +89,11 @@ export const api = {
         "/api/admin/users",
         { method: "POST", body: JSON.stringify(data) }
       ),
+    updateUser: (userId: string, data: { name?: string; email?: string; password?: string }) =>
+      request<{ id: string; name: string; email: string; role: string }>(
+        `/api/admin/users/${userId}`,
+        { method: "PUT", body: JSON.stringify(data) }
+      ),
     grantAccess: (data: { userId: string; courseId: number }) =>
       request<{ granted: boolean }>(
         "/api/admin/grant-access",

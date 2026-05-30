@@ -5,7 +5,7 @@ import { db } from "../db/index";
 import { users, courses, courseAccess, lessons } from "../db/schema";
 import { createNotification } from "./notification.service";
 import { sendWelcomeEmail, sendAccessGrantedEmail } from "./email.service";
-import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput } from "../schemas/admin.schema";
+import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput, UpdateUserInput } from "../schemas/admin.schema";
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -147,6 +147,24 @@ export async function getAllUsers(page = 1, limit = 10, search = "", role?: "adm
     limit,
     totalPages: Math.ceil(count / limit),
   };
+}
+
+export async function updateUser(userId: string, input: UpdateUserInput) {
+  const updateData: Record<string, unknown> = {};
+  if (input.name) updateData.name = input.name;
+  if (input.email) updateData.email = input.email;
+  if (input.password) {
+    updateData.passwordHash = await bcrypt.hash(input.password, 10);
+  }
+  if (Object.keys(updateData).length === 0) return null;
+
+  const [user] = await db
+    .update(users)
+    .set(updateData)
+    .where(eq(users.id, userId))
+    .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
+
+  return user ?? null;
 }
 
 export async function updateCourse(courseId: number, input: UpdateCourseInput) {
