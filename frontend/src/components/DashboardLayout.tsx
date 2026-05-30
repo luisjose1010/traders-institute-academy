@@ -45,7 +45,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
     <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif", display: "flex" }}>
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside style={{ width: 240, background: "#0a0a0a", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column" as const, position: "fixed" as const, top: 0, left: 0, bottom: 0, zIndex: 40, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.25s ease" }} className="md:translate-x-0">
+      <aside className={`fixed top-0 left-0 bottom-0 z-40 w-[240px] bg-[#0a0a0a] border-r border-[rgba(255,255,255,0.06)] flex flex-col transition-transform duration-250 ease ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img src="/traders-logo.png" alt="TIA" style={{ height: 30, cursor: "pointer" }} onClick={() => { onSection("dashboard"); navigate("/dashboard"); }} />
           <button onClick={() => setSidebarOpen(false)} className="md:hidden" style={{ background: "none", border: "none", color: "#666", cursor: "pointer" }}><X size={18} /></button>
@@ -79,20 +79,31 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
       </aside>
 
       <div style={{ flex: 1, minWidth: 0 }} className="md:ml-[240px]">
-        <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20, gap: 8 }}>
+        <header style={{ height: 60, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 1.5rem", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky" as const, top: 0, zIndex: 20, gap: 8 }}>
           <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", padding: 4 }}><Menu size={22} /></button>
           {onBack && (
             <button onClick={onBack} style={{ background: "none", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#888", display: "flex", alignItems: "center", gap: 4, fontSize: "0.82rem" }}>
               <ArrowLeft size={16} /> Back
             </button>
           )}
-          <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ccc", flex: 1 }}>{sectionTitle}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="hidden md:inline" style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ccc" }}>{sectionTitle}</span>
+          <nav className="hidden md:flex" style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto", marginRight: "auto" }}>
+            {navItems.map(item => {
+              const active = activeSection === item.id;
+              const Icon = item.icon;
+              return (
+                <button key={item.id} onClick={() => { onSection(item.id); navigate("/dashboard"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, background: active ? accentBg : "transparent", border: active ? `1px solid ${accentBorder}` : "1px solid transparent", color: active ? accentColor : "#777", fontSize: "0.82rem", fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s" }}>
+                  <Icon size={15} />{item.label}
+                </button>
+              );
+            })}
+          </nav>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
             <NotificationBell />
             {isAdmin && <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", padding: "3px 8px", borderRadius: 4 }}>ADMIN</span>}
           </div>
         </header>
-        <main style={{ padding: "1.5rem 1rem", maxWidth: 960, margin: "0 auto" }}>
+        <main style={{ padding: "1.5rem 2rem" }} className="md:ml-[240px]">
           {children}
         </main>
       </div>

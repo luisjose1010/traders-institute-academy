@@ -9,5 +9,8 @@
     "build:backend": "pnpm --filter backend build",
     "build": "pnpm run build:backend && pnpm run build:frontend",
     "typecheck": "pnpm -r --if-present run typecheck"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
   }
 }
