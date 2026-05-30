@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { Pagination } from "@/components/Pagination";
 import { UserSearch } from "@/components/UserSearch";
+import { CourseMultiSelect } from "@/components/CourseMultiSelect";
 import {
   Plus, UserPlus, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Pencil, Trash2, ListVideo, Eye, ShieldCheck, GraduationCap, Users, Archive
 } from "lucide-react";
@@ -44,7 +45,7 @@ export default function AdminDashboard() {
   const [lastStudentId, setLastStudentId] = useState<string | null>(null);
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [grantCourseId, setGrantCourseId] = useState("");
+  const [grantCourseIds, setGrantCourseIds] = useState<number[]>([]);
   const [granting, setGranting] = useState(false);
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -111,9 +112,14 @@ export default function AdminDashboard() {
   };
 
   const handleGrantAccess = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!selectedUserId || !grantCourseId) return;
+    e.preventDefault(); if (!selectedUserId || grantCourseIds.length === 0) return;
     setGranting(true);
-    try { await api.admin.grantAccess({ userId: selectedUserId, courseId: parseInt(grantCourseId) }); showMsg("success", "Access granted!"); setSelectedUserId(""); setGrantCourseId(""); if (viewingAccessUserId) loadStudentAccess(viewingAccessUserId, viewingAccessName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    try {
+      await Promise.all(grantCourseIds.map(cid => api.admin.grantAccess({ userId: selectedUserId, courseId: cid })));
+      showMsg("success", `Access granted to ${grantCourseIds.length} course(s)!`);
+      setSelectedUserId(""); setGrantCourseIds([]);
+      if (viewingAccessUserId) loadStudentAccess(viewingAccessUserId, viewingAccessName);
+    } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
     setGranting(false);
   };
 
@@ -389,13 +395,10 @@ export default function AdminDashboard() {
                 <UserSearch onSelect={u => setSelectedUserId(u.id)} selectedUserId={selectedUserId} />
               </div>
               <div>
-                <label style={labelStyle}>Course</label>
-                <select value={grantCourseId} onChange={e => setGrantCourseId(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }} required>
-                  <option value="">Select a course...</option>
-                  {courses.filter(c => c.status === "active").map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <label style={labelStyle}>Courses <span style={{ fontWeight: 400, color: "#555" }}>(select multiple)</span></label>
+                <CourseMultiSelect selectedIds={grantCourseIds} onChange={setGrantCourseIds} placeholder="Search and select courses..." />
               </div>
-              <button type="submit" disabled={granting || !selectedUserId} style={{ ...btnPrimary, background: "#9b59b6", opacity: !selectedUserId ? 0.5 : 1 }}>{granting ? <><Loader2 size={16} /> Granting...</> : <><ShieldCheck size={16} /> Grant Access</>}</button>
+              <button type="submit" disabled={granting || !selectedUserId || grantCourseIds.length === 0} style={{ ...btnPrimary, background: "#9b59b6", opacity: !selectedUserId || grantCourseIds.length === 0 ? 0.5 : 1 }}>{granting ? <><Loader2 size={16} /> Granting...</> : <><ShieldCheck size={16} /> Grant Access to {grantCourseIds.length > 0 ? `${grantCourseIds.length} course(s)` : "Course"}</>}</button>
             </form>
           </div>
         </div>
