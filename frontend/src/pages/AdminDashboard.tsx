@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
+import { api, type PaginatedResult } from "@/lib/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { Pagination } from "@/components/Pagination";
 import { UserSearch } from "@/components/UserSearch";
 import {
   Plus, UserPlus, X, BookOpen, CheckCircle2, Loader2, RefreshCw, Database, Pencil, Trash2, ListVideo, Eye, ShieldCheck, GraduationCap, Users, Archive
@@ -10,13 +11,27 @@ import {
 
 interface Course { id: number; name: string; description: string; status: string; }
 interface Lesson { id: number; courseId: number; title: string; videoUrl: string; orderIndex: number; }
+interface Student { id: string; name: string; email: string; role: string; }
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [courses, setCourses] = useState<Course[]>([]);
-  const [students, setStudents] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [courseTab, setCourseTab] = useState<"active" | "archived">("active");
+
+  // Pagination state
+  const [coursePage, setCoursePage] = useState(1);
+  const [courseLimit, setCourseLimit] = useState(10);
+  const [courseSearch, setCourseSearch] = useState("");
+  const [courseTotal, setCourseTotal] = useState(0);
+  const [courseTotalPages, setCourseTotalPages] = useState(1);
+
+  const [studentPage, setStudentPage] = useState(1);
+  const [studentLimit, setStudentLimit] = useState(10);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentTotal, setStudentTotal] = useState(0);
+  const [studentTotalPages, setStudentTotalPages] = useState(1);
 
   const [newCourseName, setNewCourseName] = useState("");
   const [newCourseDesc, setNewCourseDesc] = useState("");
@@ -27,7 +42,6 @@ export default function AdminDashboard() {
   const [newStudentPass, setNewStudentPass] = useState("");
   const [creatingStudent, setCreatingStudent] = useState(false);
   const [lastStudentId, setLastStudentId] = useState<string | null>(null);
-  const [studentSearch, setStudentSearch] = useState("");
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [grantCourseId, setGrantCourseId] = useState("");
@@ -61,11 +75,26 @@ export default function AdminDashboard() {
 
   const showMsg = (type: "success" | "error", text: string) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
 
-  const loadCourses = () => { setLoading(true); api.admin.getAllCourses().then(d => { setCourses(d); setLoading(false); }).catch(() => setLoading(false)); };
-  const loadStudents = () => { api.admin.getAllUsers().then(d => setStudents(d.filter(u => u.role === "student"))).catch(() => {}); };
-  useEffect(() => { loadCourses(); loadStudents(); }, []);
+  const loadCourses = () => {
+    setLoading(true);
+    api.admin.getAllCourses({ page: coursePage, limit: courseLimit, search: courseSearch, status: courseTab }).then(d => {
+      setCourses(d.items);
+      setCourseTotal(d.total);
+      setCourseTotalPages(d.totalPages);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
 
-  const filteredCourses = courses.filter(c => courseTab === "active" ? c.status === "active" : c.status !== "active");
+  const loadStudents = () => {
+    api.admin.getAllUsers({ page: studentPage, limit: studentLimit, search: studentSearch, role: "student" }).then(d => {
+      setStudents(d.items);
+      setStudentTotal(d.total);
+      setStudentTotalPages(d.totalPages);
+    }).catch(() => {});
+  };
+
+  useEffect(() => { loadCourses(); }, [coursePage, courseLimit, courseSearch, courseTab]);
+  useEffect(() => { loadStudents(); }, [studentPage, studentLimit, studentSearch]);
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); if (!newCourseName || !newCourseDesc) return;
@@ -200,30 +229,34 @@ export default function AdminDashboard() {
           <div style={cardStyle}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
               <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-                <button onClick={() => setCourseTab("active")} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "active" ? "rgba(201,168,76,0.12)" : "transparent", border: "none", color: courseTab === "active" ? "#C9A84C" : "#666", fontSize: "0.82rem", fontWeight: courseTab === "active" ? 700 : 400, cursor: "pointer" }}>Active ({courses.filter(c => c.status === "active").length})</button>
-                <button onClick={() => setCourseTab("archived")} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "archived" ? "rgba(255,255,255,0.06)" : "transparent", border: "none", color: courseTab === "archived" ? "#888" : "#555", fontSize: "0.82rem", fontWeight: courseTab === "archived" ? 700 : 400, cursor: "pointer" }}>Archived ({courses.filter(c => c.status !== "active").length})</button>
+                <button onClick={() => { setCourseTab("active"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "active" ? "rgba(201,168,76,0.12)" : "transparent", border: "none", color: courseTab === "active" ? "#C9A84C" : "#666", fontSize: "0.82rem", fontWeight: courseTab === "active" ? 700 : 400, cursor: "pointer" }}>Active</button>
+                <button onClick={() => { setCourseTab("archived"); setCoursePage(1); }} style={{ padding: "8px 16px", borderRadius: 8, background: courseTab === "archived" ? "rgba(255,255,255,0.06)" : "transparent", border: "none", color: courseTab === "archived" ? "#888" : "#555", fontSize: "0.82rem", fontWeight: courseTab === "archived" ? 700 : 400, cursor: "pointer" }}>Archived</button>
               </div>
+              <input value={courseSearch} onChange={e => { setCourseSearch(e.target.value); setCoursePage(1); }} placeholder="Search courses..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
               <button onClick={loadCourses} style={{ ...btnGhost, marginLeft: "auto" }}><RefreshCw size={14} /></button>
             </div>
-            {loading ? <p style={{ color: "#555" }}>Loading...</p> : filteredCourses.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
-              <div style={{ display: "grid", gap: "0.5rem" }}>
-                {filteredCourses.map(c => (
-                  <div key={c.id} onClick={() => startEdit(c)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: editingCourse?.id === c.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)")}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
-                      <div style={{ fontSize: "0.78rem", color: "#555" }}>{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
+            {loading ? <p style={{ color: "#555" }}>Loading...</p> : courses.length === 0 ? <p style={{ color: "#555", padding: "1rem 0" }}>{courseTab === "active" ? "No active courses." : "No archived courses."}</p> : (
+              <>
+                <div style={{ display: "grid", gap: "0.5rem" }}>
+                  {courses.map(c => (
+                    <div key={c.id} onClick={() => startEdit(c)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)", border: editingCourse?.id === c.id ? "1px solid rgba(201,168,76,0.15)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = editingCourse?.id === c.id ? "rgba(201,168,76,0.05)" : "rgba(255,255,255,0.02)")}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
+                        <div style={{ fontSize: "0.78rem", color: "#555" }}>{c.description.slice(0, 100)}{c.description.length > 100 ? "..." : ""}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
+                        <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
+                        <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" style={{ ...btnGhost, padding: "8px" }}><ListVideo size={16} /></button>
+                        {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                      <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: c.status === "active" ? "rgba(39,174,96,0.12)" : "rgba(255,255,255,0.05)", color: c.status === "active" ? "#27ae60" : "#555" }}>{c.status.toUpperCase()}</span>
-                      <button onClick={e => { e.stopPropagation(); loadLessons(c.id, c.name); }} title="Lessons" style={{ ...btnGhost, padding: "8px" }}><ListVideo size={16} /></button>
-                      {c.status === "active" && <button onClick={e => { e.stopPropagation(); handleArchiveCourse(c.id, c.name); }} title="Archive" style={{ ...btnDanger, padding: "8px" }}><Trash2 size={14} /></button>}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <Pagination page={coursePage} totalPages={courseTotalPages} total={courseTotal} limit={courseLimit} onPageChange={setCoursePage} onLimitChange={l => { setCourseLimit(l); setCoursePage(1); }} />
+              </>
             )}
           </div>
         </div>
@@ -290,39 +323,38 @@ export default function AdminDashboard() {
 
           <div style={cardStyle}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem", flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students ({students.length})</h3>
+              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "Poppins, sans-serif" }}>Students</h3>
               <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <input value={studentSearch} onChange={e => setStudentSearch(e.target.value)} placeholder="Search by name or email..." style={{ ...inputStyle, width: 220, padding: "6px 12px", fontSize: "0.82rem" }} />
+                <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }} placeholder="Search by name..." style={{ ...inputStyle, width: 200, padding: "6px 12px", fontSize: "0.82rem" }} />
                 <button onClick={loadStudents} style={btnGhost}><RefreshCw size={14} /></button>
               </div>
             </div>
-            {students.length === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : (
-              <div style={{ display: "grid", gap: "0.5rem" }}>
-                {students.filter(s => {
-                  if (!studentSearch) return true;
-                  const q = studentSearch.toLowerCase();
-                  return s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
-                }).map(s => (
-                  <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
-                        {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+            {students.length === 0 && studentTotal === 0 ? <p style={{ color: "#555" }}>No students yet.</p> : students.length === 0 ? <p style={{ color: "#555" }}>No results.</p> : (
+              <>
+                <div style={{ display: "grid", gap: "0.5rem" }}>
+                  {students.map(s => (
+                    <div key={s.id} onClick={() => loadStudentAccess(s.id, s.name)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", borderRadius: 10, background: viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)", border: viewingAccessUserId === s.id ? "1px solid rgba(201,168,76,0.2)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = viewingAccessUserId === s.id ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.02)")}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #C9A84C, #8a6a20)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#000", flexShrink: 0 }}>
+                          {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
+                          <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                        </div>
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>{s.name}</div>
-                        <div style={{ fontSize: "0.78rem", color: "#555" }}>{s.email}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
+                        <Eye size={14} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
-                      <span style={{ fontSize: "0.72rem", color: viewingAccessUserId === s.id ? "#C9A84C" : "#555" }}>{viewingAccessUserId === s.id ? "Viewing access" : "Click to view access"}</span>
-                      <Eye size={14} color={viewingAccessUserId === s.id ? "#C9A84C" : "#555"} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <Pagination page={studentPage} totalPages={studentTotalPages} total={studentTotal} limit={studentLimit} onPageChange={setStudentPage} onLimitChange={l => { setStudentLimit(l); setStudentPage(1); }} />
+              </>
             )}
           </div>
 

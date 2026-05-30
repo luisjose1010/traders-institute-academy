@@ -18,7 +18,7 @@ export function UserSearch({ onSelect, selectedUserId, placeholder }: {
 
   useEffect(() => {
     setLoading(true);
-    api.admin.getAllUsers().then(d => { setUsers(d); setLoading(false); }).catch(() => setLoading(false));
+    api.admin.getAllUsers({ limit: 50, role: "student" }).then(d => { setUsers(d.items); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {

@@ -1,5 +1,27 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+function buildQuery(params: PaginationParams): string {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.search) qs.set("search", params.search);
+  return qs.toString() ? `?${qs.toString()}` : "";
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem("tia_token");
   const headers: Record<string, string> = {
@@ -39,13 +61,13 @@ export const api = {
       ),
   },
   admin: {
-    getAllCourses: () =>
-      request<{ id: number; name: string; description: string; status: string }[]>(
-        "/api/admin/courses"
+    getAllCourses: (params?: PaginationParams & { status?: string }) =>
+      request<PaginatedResult<{ id: number; name: string; description: string; status: string }>>(
+        `/api/admin/courses${buildQuery(params ?? {})}`
       ),
-    getAllUsers: () =>
-      request<{ id: string; name: string; email: string; role: string }[]>(
-        "/api/admin/users"
+    getAllUsers: (params?: PaginationParams & { role?: string }) =>
+      request<PaginatedResult<{ id: string; name: string; email: string; role: string }>>(
+        `/api/admin/users${buildQuery(params ?? {})}`
       ),
     createCourse: (data: { name: string; description: string; status?: string }) =>
       request<{ id: number; name: string; description: string; status: string }>(

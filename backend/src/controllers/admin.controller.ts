@@ -35,14 +35,24 @@ export async function grantAccess(req: Request, res: Response) {
   res.status(201).json(result);
 }
 
-export async function getAllCourses(_req: Request, res: Response) {
-  const allCourses = await adminService.getAllCourses();
-  res.json(allCourses);
+export async function getAllCourses(req: Request, res: Response) {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
+  const search = (req.query.search as string) || "";
+  const status = req.query.status as "active" | "archived" | undefined;
+
+  const result = await adminService.getAllCourses(page, limit, search, status);
+  res.json(result);
 }
 
-export async function getAllUsers(_req: Request, res: Response) {
-  const allUsers = await adminService.getAllUsers();
-  res.json(allUsers);
+export async function getAllUsers(req: Request, res: Response) {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10));
+  const search = (req.query.search as string) || "";
+  const role = req.query.role as "admin" | "student" | undefined;
+
+  const result = await adminService.getAllUsers(page, limit, search, role);
+  res.json(result);
 }
 
 export async function updateCourse(req: Request, res: Response) {

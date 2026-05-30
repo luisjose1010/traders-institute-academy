@@ -1,11 +1,19 @@
 import bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like, desc } from "drizzle-orm";
 import { db } from "../db/index";
 import { users, courses, courseAccess, lessons } from "../db/schema";
 import { createNotification } from "./notification.service";
 import { sendWelcomeEmail, sendAccessGrantedEmail } from "./email.service";
 import type { CreateUserInput, CreateCourseInput, GrantAccessInput, UpdateCourseInput, CreateLessonInput, UpdateLessonInput } from "../schemas/admin.schema";
+
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 export async function createUser(input: CreateUserInput) {
   const passwordHash = await bcrypt.hash(input.password, 10);
@@ -73,17 +81,70 @@ export async function getStudentAccess(userId: string) {
     .where(eq(courseAccess.userId, userId));
 }
 
-export async function getAllCourses() {
-  return db.select().from(courses);
+export async function getAllCourses(page = 1, limit = 10, search = "", status?: "active" | "archived"): Promise<PaginatedResult<typeof courses.$inferSelect>> {
+  const offset = (page - 1) * limit;
+  const searchPattern = search ? `%${search}%` : undefined;
+
+  const whereClause = searchPattern
+    ? and(status ? eq(courses.status, status) : undefined, like(courses.name, searchPattern))
+    : status ? eq(courses.status, status) : undefined;
+
+  const items = await db
+    .select()
+    .from(courses)
+    .where(whereClause)
+    .orderBy(desc(courses.id))
+    .limit(limit)
+    .offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: db.$count(courses, whereClause) })
+    .from(courses);
+
+  return {
+    items,
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+  };
 }
 
-export async function getAllUsers() {
-  return db.select({
-    id: users.id,
-    name: users.name,
-    email: users.email,
-    role: users.role,
-  }).from(users);
+export async function getAllUsers(page = 1, limit = 10, search = "", role?: "admin" | "student"): Promise<PaginatedResult<{ id: string; name: string; email: string; role: string }>> {
+  const offset = (page - 1) * limit;
+  const searchPattern = search ? `%${search}%` : undefined;
+
+  const whereClause = searchPattern
+    ? and(
+        role ? eq(users.role, role) : undefined,
+        like(users.name, searchPattern)
+      )
+    : role ? eq(users.role, role) : undefined;
+
+  const items = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+    })
+    .from(users)
+    .where(whereClause)
+    .orderBy(desc(users.id))
+    .limit(limit)
+    .offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: db.$count(users, whereClause) })
+    .from(users);
+
+  return {
+    items,
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+  };
 }
 
 export async function updateCourse(courseId: number, input: UpdateCourseInput) {
