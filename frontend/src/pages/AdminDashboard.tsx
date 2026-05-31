@@ -93,14 +93,39 @@ export default function AdminDashboard() {
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); if (!newCourseName || !newCourseDesc) return;
+    const name = newCourseName; const desc = newCourseDesc;
+    setNewCourseName(""); setNewCourseDesc("");
     setCreatingCourse(true);
-    try { const res = await api.admin.createCourse({ name: newCourseName, description: newCourseDesc }); showMsg("success", "Course created: " + res.name); setNewCourseName(""); setNewCourseDesc(""); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    const optimistic: Course = { id: Date.now(), name, description: desc, status: "active" };
+    setCourses(prev => [optimistic, ...prev]);
+    try {
+      const res = await api.admin.createCourse({ name, description: desc });
+      setCourses(prev => prev.map(c => c.id === optimistic.id ? res : c));
+      showMsg("success", "Course created: " + res.name);
+    } catch (err: unknown) {
+      setCourses(prev => prev.filter(c => c.id !== optimistic.id));
+      setNewCourseName(name); setNewCourseDesc(desc);
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
     setCreatingCourse(false);
   };
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault(); if (!newStudentName || !newStudentEmail || !newStudentPass) return;
+    const name = newStudentName; const email = newStudentEmail; const pass = newStudentPass;
+    setNewStudentName(""); setNewStudentEmail(""); setNewStudentPass("");
     setCreatingStudent(true);
-    try { const res = await api.admin.createUser({ name: newStudentName, email: newStudentEmail, password: newStudentPass, role: "student" }); showMsg("success", "Student created: " + res.name); setLastStudentId(res.id); setNewStudentName(""); setNewStudentEmail(""); setNewStudentPass(""); loadStudents(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    const optimistic: Student = { id: "tmp_" + Date.now(), name, email, role: "student" };
+    setStudents(prev => [optimistic, ...prev]);
+    try {
+      const res = await api.admin.createUser({ name, email, password: pass, role: "student" });
+      setStudents(prev => prev.map(s => s.id === optimistic.id ? res : s));
+      setLastStudentId(res.id);
+      showMsg("success", "Student created: " + res.name);
+    } catch (err: unknown) {
+      setStudents(prev => prev.filter(s => s.id !== optimistic.id));
+      setNewStudentName(name); setNewStudentEmail(email); setNewStudentPass(pass);
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
     setCreatingStudent(false);
   };
   const handleGrantAccess = async (e: React.FormEvent) => {
@@ -116,21 +141,78 @@ export default function AdminDashboard() {
   const startEdit = (course: Course) => { setEditingCourse(course); setEditName(course.name); setEditDesc(course.description); setEditStatus(course.status); };
   const handleUpdateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editingCourse) return;
+    const old = { ...editingCourse };
+    const updated = { ...editingCourse, name: editName, description: editDesc, status: editStatus as "active" | "inactive" | "archived" };
+    setCourses(p => p.map(c => c.id === editingCourse.id ? updated : c));
+    setEditingCourse(null);
     setSaving(true);
-    try { await api.admin.updateCourse(editingCourse.id, { name: editName, description: editDesc, status: editStatus as "active" | "inactive" }); showMsg("success", "Course updated"); setEditingCourse(null); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    try {
+      await api.admin.updateCourse(editingCourse.id, { name: editName, description: editDesc, status: editStatus as "active" | "inactive" | "archived" });
+      showMsg("success", "Course updated");
+    } catch (err: unknown) {
+      setCourses(p => p.map(c => c.id === editingCourse.id ? old : c));
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
     setSaving(false);
   };
-  const handleArchiveCourse = async (courseId: number, name: string) => { if (!confirm(`Archive "${name}"?`)) return; try { await api.admin.updateCourse(courseId, { status: "archived" }); showMsg("success", "Archived: " + name); loadCourses(); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
+  const handleArchiveCourse = async (courseId: number, name: string) => {
+    if (!confirm(`Archive "${name}"?`)) return;
+    const old = courses.find(c => c.id === courseId);
+    setCourses(p => p.map(c => c.id === courseId ? { ...c, status: "archived" as const } : c));
+    try {
+      await api.admin.updateCourse(courseId, { status: "archived" });
+      showMsg("success", "Archived: " + name);
+    } catch (err: unknown) {
+      if (old) setCourses(p => p.map(c => c.id === courseId ? old : c));
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
+  };
   const loadLessons = (courseId: number, courseName: string) => { setManagingCourseId(courseId); setManagingCourseName(courseName); setLessonsLoading(true); api.admin.getLessonsByCourse(courseId).then(d => setCourseLessons(d)).catch(() => {}).finally(() => setLessonsLoading(false)); };
   const handleAddLesson = async (e: React.FormEvent) => {
     e.preventDefault(); if (!managingCourseId || !newLessonTitle || !newLessonUrl) return;
+    const title = newLessonTitle; const url = newLessonUrl; const order = newLessonOrder;
+    setNewLessonTitle(""); setNewLessonUrl(""); setNewLessonOrder(order + 1);
     setAddingLesson(true);
-    try { await api.admin.createLesson(managingCourseId, { title: newLessonTitle, videoUrl: newLessonUrl, orderIndex: newLessonOrder }); showMsg("success", "Lesson added"); setNewLessonTitle(""); setNewLessonUrl(""); setNewLessonOrder(newLessonOrder + 1); loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); }
+    const optimistic: Lesson = { id: Date.now(), courseId: managingCourseId, title, videoUrl: url, orderIndex: order };
+    setCourseLessons(prev => [...prev, optimistic]);
+    try {
+      const res = await api.admin.createLesson(managingCourseId, { title, videoUrl: url, orderIndex: order });
+      setCourseLessons(prev => prev.map(l => l.id === optimistic.id ? res : l));
+      showMsg("success", "Lesson added");
+    } catch (err: unknown) {
+      setCourseLessons(prev => prev.filter(l => l.id !== optimistic.id));
+      setNewLessonTitle(title); setNewLessonUrl(url); setNewLessonOrder(order);
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
     setAddingLesson(false);
   };
   const startEditLesson = (lesson: Lesson) => { setEditingLesson(lesson); setEditLessonTitle(lesson.title); setEditLessonUrl(lesson.videoUrl); setEditLessonOrder(lesson.orderIndex); };
-  const handleUpdateLesson = async (e: React.FormEvent) => { e.preventDefault(); if (!editingLesson) return; try { await api.admin.updateLesson(editingLesson.id, { title: editLessonTitle, videoUrl: editLessonUrl, orderIndex: editLessonOrder }); showMsg("success", "Lesson updated"); setEditingLesson(null); if (managingCourseId) loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
-  const handleDeleteLesson = async (lessonId: number, title: string) => { if (!confirm(`Delete "${title}"?`)) return; try { await api.admin.deleteLesson(lessonId); showMsg("success", "Lesson deleted"); if (managingCourseId) loadLessons(managingCourseId, managingCourseName); } catch (err: unknown) { showMsg("error", err instanceof Error ? err.message : "Failed"); } };
+  const handleUpdateLesson = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editingLesson) return;
+    const old = { ...editingLesson };
+    const updated: Lesson = { ...editingLesson, title: editLessonTitle, videoUrl: editLessonUrl, orderIndex: editLessonOrder };
+    setCourseLessons(ls => ls.map(l => l.id === editingLesson.id ? updated : l));
+    setEditingLesson(null);
+    try {
+      await api.admin.updateLesson(editingLesson.id, { title: editLessonTitle, videoUrl: editLessonUrl, orderIndex: editLessonOrder });
+      showMsg("success", "Lesson updated");
+    } catch (err: unknown) {
+      setCourseLessons(ls => ls.map(l => l.id === editingLesson.id ? old : l));
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
+  };
+  const handleDeleteLesson = async (lessonId: number, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
+    const prev = courseLessons.find(l => l.id === lessonId);
+    setCourseLessons(ls => ls.filter(l => l.id !== lessonId));
+    try {
+      await api.admin.deleteLesson(lessonId);
+      showMsg("success", "Lesson deleted");
+    } catch (err: unknown) {
+      if (prev) setCourseLessons(ls => [...ls, prev]);
+      showMsg("error", err instanceof Error ? err.message : "Failed");
+    }
+  };
 
   const layoutTitle = managingCourseId ? `${managingCourseName} — Lessons` : undefined;
 

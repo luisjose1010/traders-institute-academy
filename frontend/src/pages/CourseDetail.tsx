@@ -43,8 +43,15 @@ export default function CourseDetail() {
 
   const handleMarkComplete = async () => {
     if (!activeLesson || !courseId) return;
+    const prevCompleted = new Set(completedIds);
+    setCompletedIds(ids => new Set(ids).add(activeLesson.id));
     setMarking(true);
-    try { await api.student.markLessonComplete(courseId, activeLesson.id); setCompletedIds(prev => new Set(prev).add(activeLesson.id)); await refreshProgress(); } catch {}
+    try {
+      await api.student.markLessonComplete(courseId, activeLesson.id);
+      await refreshProgress();
+    } catch {
+      setCompletedIds(prevCompleted);
+    }
     setMarking(false);
   };
 

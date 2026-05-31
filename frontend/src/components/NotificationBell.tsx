@@ -23,17 +23,29 @@ export function NotificationBell() {
   useEffect(() => { load(); }, []);
 
   const handleMarkRead = async (id: number) => {
+    const oldNotifications = notifications;
+    const oldUnread = unreadCount;
+    setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount(c => Math.max(0, c - 1));
     try {
       await api.notifications.markAsRead(id);
-      load();
-    } catch {}
+    } catch {
+      setNotifications(oldNotifications);
+      setUnreadCount(oldUnread);
+    }
   };
 
   const handleMarkAllRead = async () => {
+    const oldNotifications = notifications;
+    const oldUnread = unreadCount;
+    setNotifications(p => p.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
     try {
       await api.notifications.markAllAsRead();
-      load();
-    } catch {}
+    } catch {
+      setNotifications(oldNotifications);
+      setUnreadCount(oldUnread);
+    }
   };
 
   return (

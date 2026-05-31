@@ -13,20 +13,21 @@ export function ProfileEditor() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name && !password) return;
+    const newName = name; const newPass = password;
+    setName(""); setPassword("");
     setSaving(true);
+    setMsg({ type: "success", text: "Profile updated!" });
     try {
       const data: { name?: string; password?: string } = {};
-      if (name) data.name = name;
-      if (password) data.password = password;
+      if (newName) data.name = newName;
+      if (newPass) data.password = newPass;
       await api.auth.updateProfile(data);
-      setMsg({ type: "success", text: "Profile updated!" });
-      setName("");
-      setPassword("");
-      setTimeout(() => setMsg(null), 3000);
     } catch (err: unknown) {
+      setName(newName); setPassword(newPass);
       setMsg({ type: "error", text: err instanceof Error ? err.message : "Failed to update" });
     }
     setSaving(false);
+    setTimeout(() => setMsg(null), 3000);
   };
 
   return (
