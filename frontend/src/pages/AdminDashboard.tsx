@@ -315,7 +315,11 @@ export default function AdminDashboard() {
               <>
                 <div className="grid gap-2">
                   {students.map(s => (
-                    <div key={s.id} className="flex items-center justify-between px-4 py-4 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.04)] transition-colors">
+                    <div
+                      key={s.id}
+                      onClick={() => navigate(`/dashboard/students/${s.id}`)}
+                      className="flex items-center justify-between px-4 py-4 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.04)] cursor-pointer transition-colors"
+                    >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#8a6a20] flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0">
                           {s.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
@@ -326,7 +330,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        <button onClick={() => navigate(`/dashboard/students/${s.id}`)} title="Edit & Access" className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg p-1.5 cursor-pointer text-[#888] hover:text-[#C9A84C] transition-colors"><Pencil size={13} /></button>
+                        <Pencil size={13} className="text-[#555]" />
                       </div>
                     </div>
                   ))}

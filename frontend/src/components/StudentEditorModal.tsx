@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
-import { X, Pencil, ShieldCheck, UserPlus, Check, Trash2, Loader2 } from "lucide-react";
+import { X, Pencil, ShieldCheck, UserPlus, Check, Loader2 } from "lucide-react";
 
 interface Student { id: string; name: string; email: string; role: string; }
 interface CourseAccess { courseId: number; courseName: string; }
@@ -23,16 +23,16 @@ export function StudentEditorModal({
   const [accessList, setAccessList] = useState<CourseAccess[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [granting, setGranting] = useState(false);
 
   // Info form state
   const [editName, setEditName] = useState(student.name);
   const [editEmail, setEditEmail] = useState(student.email);
   const [editPass, setEditPass] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  // Course grant state
-  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
+  // Pending operations for optimistic rollback
+  const [pendingGrants, setPendingGrants] = useState<Set<number>>(new Set());
+  const [pendingRevokes, setPendingRevokes] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     Promise.all([
@@ -58,30 +58,37 @@ export function StudentEditorModal({
       onRefresh();
       setEditPass("");
     } catch {
-      // error handled by api layer
+      // revert on error
     }
     setSaving(false);
   };
 
   const handleGrant = async (courseId: number, courseName: string) => {
-    setGranting(true);
+    // Optimistic: add immediately
+    setAccessList(prev => [...prev, { courseId, courseName }]);
+    setPendingGrants(prev => new Set(prev).add(courseId));
     try {
       await api.admin.grantAccess({ userId: student.id, courseId });
-      setAccessList(prev => [...prev, { courseId, courseName }]);
-      setSelectedCourseIds(prev => prev.filter(id => id !== courseId));
+      setPendingGrants(prev => { const n = new Set(prev); n.delete(courseId); return n; });
     } catch {
-      // error
+      // Rollback
+      setAccessList(prev => prev.filter(a => a.courseId !== courseId));
+      setPendingGrants(prev => { const n = new Set(prev); n.delete(courseId); return n; });
     }
-    setGranting(false);
   };
 
   const handleRevoke = async (courseId: number, courseName: string) => {
     if (!confirm(`Revoke "${courseName}"?`)) return;
+    // Optimistic: remove immediately
+    setAccessList(prev => prev.filter(a => a.courseId !== courseId));
+    setPendingRevokes(prev => new Set(prev).add(courseId));
     try {
       await api.admin.revokeAccess({ userId: student.id, courseId });
-      setAccessList(prev => prev.filter(a => a.courseId !== courseId));
+      setPendingRevokes(prev => { const n = new Set(prev); n.delete(courseId); return n; });
     } catch {
-      // error
+      // Rollback
+      setAccessList(prev => [...prev, { courseId, courseName }]);
+      setPendingRevokes(prev => { const n = new Set(prev); n.delete(courseId); return n; });
     }
   };
 
@@ -164,12 +171,21 @@ export function StudentEditorModal({
                 </div>
               ) : (
                 <div className="grid gap-2">
-                  {accessList.map(a => (
-                    <div key={a.courseId} className="flex items-center justify-between px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)]">
-                      <span className="text-sm font-semibold">{a.courseName}</span>
-                      <button onClick={() => handleRevoke(a.courseId, a.courseName)} className="bg-[rgba(231,76,60,0.1)] border border-[rgba(231,76,60,0.2)] rounded-lg px-3 py-1.5 cursor-pointer text-[#e74c3c] text-xs font-bold hover:bg-[rgba(231,76,60,0.2)] transition-colors">Revoke</button>
-                    </div>
-                  ))}
+                  {accessList.map(a => {
+                    const pending = pendingRevokes.has(a.courseId);
+                    return (
+                      <div key={a.courseId} className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${pending ? "opacity-40 border-[rgba(231,76,60,0.1)]" : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.04)]"}`}>
+                        <span className="text-sm font-semibold">{a.courseName}</span>
+                        <button
+                          onClick={() => handleRevoke(a.courseId, a.courseName)}
+                          disabled={pending}
+                          className="bg-[rgba(231,76,60,0.1)] border border-[rgba(231,76,60,0.2)] rounded-lg px-3 py-1.5 cursor-pointer text-[#e74c3c] text-xs font-bold hover:bg-[rgba(231,76,60,0.2)] transition-colors disabled:opacity-50"
+                        >
+                          {pending ? "..." : "Revoke"}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -181,22 +197,24 @@ export function StudentEditorModal({
                   </h4>
                   <div className="grid gap-1.5 max-h-[200px] overflow-y-auto">
                     {availableCourses.map(c => {
-                      const selected = selectedCourseIds.includes(c.id);
+                      const pending = pendingGrants.has(c.id);
                       return (
                         <button
                           key={c.id}
                           onClick={() => handleGrant(c.id, c.name)}
-                          disabled={granting}
+                          disabled={pending}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm hover:bg-[rgba(255,255,255,0.04)] transition-colors disabled:opacity-50"
                         >
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selected ? "bg-[#27ae60] border-[#27ae60]" : "border-[rgba(255,255,255,0.2)]"}`}>
-                            {selected && <Check size={10} className="text-black" />}
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${pending ? "bg-[#27ae60] border-[#27ae60]" : "border-[rgba(255,255,255,0.2)]"}`}>
+                            {pending && <Check size={10} className="text-black" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-white truncate">{c.name}</div>
                             <div className="text-xs text-[#555] truncate">{c.description.slice(0, 60)}</div>
                           </div>
-                          <span className="text-[#27ae60] text-xs font-bold">Grant</span>
+                          <span className={`text-xs font-bold ${pending ? "text-[#555]" : "text-[#27ae60]"}`}>
+                            {pending ? "..." : "Grant"}
+                          </span>
                         </button>
                       );
                     })}
