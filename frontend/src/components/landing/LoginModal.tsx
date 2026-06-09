@@ -119,7 +119,7 @@ export function LoginModal({ children }: { children: React.ReactNode }) {
           <div className="text-center text-sm text-muted-foreground pt-1">
             Not enrolled?{" "}
             <a
-              href="#enroll"
+              href="mailto:admin@tudominio.com?subject=Application%20for%20Enrollment%20-%20Traders%20Institute"
               className="text-[#C9A84C] hover:underline"
               onClick={() => setOpen(false)}
             >
