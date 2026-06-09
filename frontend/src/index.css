@@ -77,38 +77,38 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 0 0% 3%;
-  --foreground: 0 0% 95%;
+  --background: 0 0% 1%;
+  --foreground: 0 0% 98%;
 
-  --border: 43 50% 35% / 0.12;
+  --border: 43 50% 35% / 0.15;
 
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 90%;
-  --card-border: 43 50% 35% / 0.15;
+  --card: 0 0% 3%;
+  --card-foreground: 0 0% 95%;
+  --card-border: 0 0% 100% / 0.08;
 
-  --sidebar: 0 0% 7%;
-  --sidebar-foreground: 0 0% 90%;
-  --sidebar-border: 43 50% 35% / 0.15;
+  --sidebar: 0 0% 3%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-border: 0 0% 100% / 0.08;
   --sidebar-primary: 43 50% 55%;
   --sidebar-primary-foreground: 0 0% 5%;
-  --sidebar-accent: 0 0% 10%;
-  --sidebar-accent-foreground: 0 0% 70%;
+  --sidebar-accent: 0 0% 8%;
+  --sidebar-accent-foreground: 0 0% 80%;
   --sidebar-ring: 43 50% 55%;
 
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 90%;
-  --popover-border: 43 50% 35% / 0.15;
+  --popover: 0 0% 3%;
+  --popover-foreground: 0 0% 95%;
+  --popover-border: 0 0% 100% / 0.08;
 
-  --primary: 43 50% 55%;
+  --primary: 43 60% 55%;
   --primary-foreground: 0 0% 5%;
 
-  --secondary: 0 0% 10%;
-  --secondary-foreground: 0 0% 70%;
+  --secondary: 0 0% 8%;
+  --secondary-foreground: 0 0% 80%;
 
-  --muted: 0 0% 8%;
-  --muted-foreground: 0 0% 45%;
+  --muted: 0 0% 6%;
+  --muted-foreground: 0 0% 50%;
 
-  --accent: 43 50% 55%;
+  --accent: 43 60% 55%;
   --accent-foreground: 0 0% 5%;
 
   --destructive: 0 75% 55%;

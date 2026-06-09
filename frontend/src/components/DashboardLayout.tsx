@@ -42,11 +42,11 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
   const sectionTitle = title ?? navItems.find(n => n.id === activeSection)?.label ?? activeSection;
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white font-['Inter']">
+    <div className="min-h-screen bg-background text-white font-sans selection:bg-primary/30">
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed top-0 left-0 bottom-0 z-40 w-[240px] bg-[#0a0a0a] border-r border-[rgba(255,255,255,0.06)] flex flex-col transition-transform duration-250 ease ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
-        <div className="px-6 py-5 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
+      <aside className={`fixed top-0 left-0 bottom-0 z-40 w-[240px] glass-panel border-r border-white/5 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.8)] flex flex-col transition-transform duration-300 ease-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+        <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between">
           <img src="/traders-logo.png" alt="TIA" className="h-[30px] cursor-pointer" onClick={() => { onSection("dashboard"); navigate("/dashboard"); }} />
           <button onClick={() => setSidebarOpen(false)} className="md:hidden bg-none border-none text-[#666] cursor-pointer"><X size={18} /></button>
         </div>
@@ -70,7 +70,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
           <button onClick={() => navigate("/")} className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg bg-none border-none text-[#555] text-xs cursor-pointer hover:text-[#888] transition-colors">
             <ArrowLeft size={14} /> Back to site
           </button>
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-[rgba(255,255,255,0.03)] mb-1.5">
+          <div className="flex items-center gap-3 px-3 py-3 rounded-xl glass-card mb-2 hover:bg-white/[0.04] transition-colors cursor-default">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: isAdmin ? "linear-gradient(135deg, #e74c3c, #c0392b)" : "linear-gradient(135deg, #C9A84C, #8a6a20)", color: isAdmin ? "#fff" : "#000" }}>{user?.initials ?? "?"}</div>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-[#ddd] overflow-hidden text-ellipsis whitespace-nowrap">{user?.name ?? "User"}</div>
@@ -82,7 +82,7 @@ export function DashboardLayout({ children, activeSection, onSection, title, onB
       </aside>
 
       <div className="md:ml-[240px]">
-        <header className="h-[60px] border-b border-[rgba(255,255,255,0.06)] flex items-center px-6 bg-[rgba(8,8,8,0.95)] backdrop-blur-md sticky top-0 z-20 gap-2">
+        <header className="h-[64px] border-b border-white/5 flex items-center px-6 glass-panel sticky top-0 z-20 gap-3 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.8)]">
           <button className="md:hidden bg-none border-none text-[#888] cursor-pointer p-1" onClick={() => setSidebarOpen(true)}><Menu size={22} /></button>
           {onBack && (
             <button onClick={onBack} className="bg-none border border-[rgba(255,255,255,0.08)] rounded-lg px-2.5 py-1.5 cursor-pointer text-[#888] flex items-center gap-1 text-xs">

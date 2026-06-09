@@ -27,9 +27,10 @@ export function CourseModules() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.7, delay: index * 0.1, type: "spring", bounce: 0.4 }}
               >
-                <Card className="bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 group h-full">
+                <Card className="glass-card overflow-hidden hover:border-primary/40 transition-all duration-500 group h-full hover:-translate-y-2 hover:shadow-[0_12px_40px_-10px_rgba(201,168,76,0.15)] relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
                   {/* Gradient banner */}
                   <div
                     className="h-28 relative flex items-center justify-center"

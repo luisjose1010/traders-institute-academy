@@ -55,13 +55,24 @@ export default function CourseDetail() {
     setMarking(false);
   };
 
-  if (loading) return (
-    <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title="Loading...">
-      <div style={{ textAlign: "center", padding: "4rem 0", color: "#555" }}>Loading course...</div>
+  if (loading || !course) return (
+    <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title={loading ? "Loading course..." : "Course"}>
+      <div className="animate-pulse flex flex-col lg:flex-row gap-6">
+        <div className="flex-1">
+          <div className="w-full aspect-video bg-[#0f0f0f] rounded-xl border border-white/5 mb-6"></div>
+          <div className="h-4 w-24 bg-[#0f0f0f] rounded mb-3"></div>
+          <div className="h-8 w-64 bg-[#0f0f0f] rounded mb-4"></div>
+          <div className="h-4 w-full bg-[#0f0f0f] rounded mb-2"></div>
+          <div className="h-4 w-2/3 bg-[#0f0f0f] rounded"></div>
+        </div>
+        <div className="w-full lg:w-80">
+          <div className="h-[400px] w-full bg-[#0f0f0f] rounded-xl border border-white/5"></div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 
-  if (error || !course) return (
+  if (error) return (
     <DashboardLayout activeSection="courses" onSection={() => navigate("/dashboard")} title="Error">
       <div style={{ textAlign: "center", padding: "4rem 0" }}>
         <p style={{ color: "#e74c3c", marginBottom: 16 }}>{error || "Course not found"}</p>

@@ -25,8 +25,16 @@ export function Hero() {
       </div>
 
       {/* Glow orbs */}
-      <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-primary/5 blur-[150px] rounded-full pointer-events-none z-10" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/4 blur-[100px] rounded-full pointer-events-none z-10" />
+      <motion.div 
+        animate={{ y: [0, -20, 0], scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/10 blur-[150px] rounded-full pointer-events-none z-10" 
+      />
+      <motion.div 
+        animate={{ y: [0, 30, 0], scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none z-10" 
+      />
 
       <div className="container relative z-30 mx-auto px-4 md:px-6 flex-1 flex items-center">
         <div className="max-w-3xl">
@@ -64,8 +72,9 @@ export function Hero() {
               <a href="#enroll">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto text-base h-13 px-8 group shadow-[0_0_30px_-8px_hsl(var(--primary))] hover:shadow-[0_0_45px_-8px_hsl(var(--primary))] transition-all duration-300"
+                  className="w-full sm:w-auto text-base h-13 px-8 group shadow-[0_0_30px_-8px_hsl(var(--primary))] hover:shadow-[0_0_50px_-5px_hsl(var(--primary))] hover:scale-105 transition-all duration-300 border border-primary/20 relative overflow-hidden"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   Begin Your Journey
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>

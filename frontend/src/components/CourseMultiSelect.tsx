@@ -89,15 +89,16 @@ export function CourseMultiSelect({
       )}
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0f0f0f] border border-[rgba(255,255,255,0.1)] rounded-xl max-h-[280px] overflow-auto z-50 shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0f0f0f] border border-[rgba(255,255,255,0.1)] rounded-xl max-h-[280px] overflow-y-auto z-50 shadow-[0_12px_40px_rgba(0,0,0,0.5)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/20">
           <div className="sticky top-0 bg-[#0f0f0f] p-2 border-b border-[rgba(255,255,255,0.06)]">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
+              <button onClick={() => setOpen(false)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#888] bg-transparent border-none cursor-pointer"><X size={14} /></button>
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search courses..."
-                className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.3)]"
+                className="w-full bg-[#080808] border border-[rgba(255,255,255,0.1)] rounded-lg pl-9 pr-8 py-2 text-sm text-white outline-none focus:border-[rgba(201,168,76,0.3)]"
                 autoFocus
               />
             </div>

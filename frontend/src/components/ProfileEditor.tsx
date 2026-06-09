@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { User, Lock, Save, CheckCircle2, AlertCircle } from "lucide-react";
 
 export function ProfileEditor() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -21,7 +21,8 @@ export function ProfileEditor() {
       const data: { name?: string; password?: string } = {};
       if (newName) data.name = newName;
       if (newPass) data.password = newPass;
-      await api.auth.updateProfile(data);
+      const updatedUser = await api.auth.updateProfile(data);
+      updateUser(updatedUser);
     } catch (err: unknown) {
       setName(newName); setPassword(newPass);
       setMsg({ type: "error", text: err instanceof Error ? err.message : "Failed to update" });

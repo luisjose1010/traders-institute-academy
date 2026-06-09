@@ -47,16 +47,18 @@ export default function StudentDashboard() {
 
   return (
     <DashboardLayout activeSection={activeSection} onSection={setActiveSection}>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1 font-['Poppins']">Welcome back, <span className="text-[#C9A84C]">{user?.name ?? "Student"}</span></h1>
-        <p className="text-[#666] m-0 text-sm">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
-      </div>
+      {activeSection === "dashboard" && (
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold mb-1 font-['Poppins']">Welcome back, <span className="text-[#C9A84C]">{user?.name ?? "Student"}</span></h1>
+          <p className="text-[#666] m-0 text-sm">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+        </div>
+      )}
 
       {activeSection === "profile" && <ProfileEditor />}
 
       {activeSection === "dashboard" && (
         loading ? (
-          <div className="text-center py-16 text-[#555]">Loading your courses...</div>
+          <div className="text-center py-16 text-[#555]">Loading your dashboard...</div>
         ) : courses.length === 0 ? (
           <div className="text-center py-16">
             <GraduationCap size={48} className="text-[#333] mx-auto mb-4" />
@@ -94,7 +96,7 @@ export default function StudentDashboard() {
                           <h3 className="m-0 text-sm font-bold text-white leading-tight">{course.name}</h3>
                         </div>
                       </div>
-                      <p className="text-xs text-[#777] leading-relaxed mb-4">{course.description}</p>
+                      <p className="text-xs text-[#777] leading-relaxed mb-4 line-clamp-2">{course.description}</p>
                       <div className="flex gap-3.5 mb-4"><span className="flex items-center gap-1 text-xs text-[#555]"><Clock size={11} /> {meta.duration}</span></div>
                       {progress[course.id] && progress[course.id].total > 0 && (
                         <div className="mb-3">
@@ -107,7 +109,7 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                       )}
-                      <button className="flex items-center gap-1 bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.25)] text-[#C9A84C] rounded-md px-2.5 py-1 text-[10px] font-semibold cursor-pointer"><PlayCircle size={11} /> {progress[course.id]?.percent === 100 ? "Review" : progress[course.id]?.percent > 0 ? "Continue" : "Start Course"}</button>
+                      <button className="flex items-center gap-1 bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.25)] hover:bg-[rgba(201,168,76,0.2)] transition-colors text-[#C9A84C] rounded-md px-2.5 py-1.5 text-[10px] font-semibold cursor-pointer w-full justify-center"><PlayCircle size={12} /> {progress[course.id]?.percent === 100 ? "Review" : progress[course.id]?.percent > 0 ? "Continue" : "Start Course"}</button>
                     </div>
                   </div>
                 ); })}
@@ -117,7 +119,63 @@ export default function StudentDashboard() {
         )
       )}
 
-      {activeSection !== "dashboard" && activeSection !== "profile" && (
+      {activeSection === "courses" && (
+        loading ? (
+          <div className="text-center py-16 text-[#555]">Loading your courses...</div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-16">
+            <GraduationCap size={48} className="text-[#333] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[#888] mb-2">No courses yet</h3>
+            <p className="text-[#555] text-sm">You haven't been enrolled in any courses yet. Contact your administrator.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl font-bold font-['Poppins']">My Courses</h1>
+              <span className="text-sm font-medium text-[#C9A84C] bg-[rgba(201,168,76,0.1)] px-3 py-1 rounded-full">{courses.length} Enrolled</span>
+            </div>
+            {courses.map((course) => {
+              const meta = COURSE_META[course.id] || COURSE_META[1];
+              const ls = LEVEL_STYLES[meta.level] || LEVEL_STYLES.Beginner;
+              return (
+                <div key={course.id} onClick={() => handleCourseClick(course.id)} className="bg-[#0f0f0f] border border-[rgba(255,255,255,0.06)] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:border-[rgba(201,168,76,0.4)] hover:bg-[rgba(255,255,255,0.02)] flex flex-col md:flex-row items-center gap-6 p-6">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[rgba(201,168,76,0.15)] to-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.2)] flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={28} className="text-[#C9A84C]" />
+                  </div>
+                  <div className="flex-1 w-full min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ls.bg} ${ls.text}`}>{meta.level.toUpperCase()}</span>
+                      <span className="text-xs font-medium text-[#777] flex items-center gap-1"><Clock size={12} /> {meta.duration}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1.5 font-['Poppins'] truncate">{course.name}</h3>
+                    <p className="text-sm text-[#777] leading-relaxed line-clamp-2 m-0">{course.description}</p>
+                  </div>
+                  <div className="w-full md:w-64 flex flex-col gap-3 flex-shrink-0">
+                    {progress[course.id] && progress[course.id].total > 0 ? (
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-xs font-medium text-[#888]">{progress[course.id].completed} of {progress[course.id].total} lessons</span>
+                          <span className="text-xs font-bold text-[#C9A84C]">{progress[course.id].percent}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-[rgba(255,255,255,0.08)]">
+                          <div className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#e8c96a] transition-all duration-500 shadow-[0_0_10px_rgba(201,168,76,0.3)]" style={{ width: `${progress[course.id].percent}%`, background: progress[course.id].percent === 100 ? "#27ae60" : undefined }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-xs font-medium text-[#666] text-right">Not started yet</div>
+                    )}
+                    <button className="w-full flex items-center justify-center gap-2 bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.25)] hover:bg-[rgba(201,168,76,0.2)] transition-colors text-[#C9A84C] rounded-lg px-4 py-2.5 text-xs font-bold cursor-pointer mt-1">
+                      <PlayCircle size={14} /> {progress[course.id]?.percent === 100 ? "Review Course" : progress[course.id]?.percent > 0 ? "Continue Learning" : "Start Course"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {activeSection !== "dashboard" && activeSection !== "courses" && activeSection !== "profile" && (
         <div className="text-center py-16">
           <Settings size={40} className="text-[#333] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-[#888] mb-2">Coming soon</h3>

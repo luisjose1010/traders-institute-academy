@@ -16,6 +16,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
+  updateUser: (data: Partial<AuthUser>) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -74,8 +75,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((data: Partial<AuthUser>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...data };
+      if (data.name) updated.initials = makeInitials(data.name);
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: user !== null, isAdmin: user?.role === "admin" }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: user !== null, isAdmin: user?.role === "admin" }}>
       {children}
     </AuthContext.Provider>
   );
