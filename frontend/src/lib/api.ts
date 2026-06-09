@@ -49,7 +49,7 @@ export const api = {
         { method: "POST", body: JSON.stringify({ email, password }) }
       ),
     updateProfile: (data: { name?: string; password?: string }) =>
-      request<{ id: string; name: string; email: string; role: string }>(
+      request<{ id: string; name: string; email: string; role: "admin" | "student" }>(
         "/api/auth/profile",
         { method: "PUT", body: JSON.stringify(data) }
       ),
